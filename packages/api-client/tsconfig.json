@@ -1,0 +1,8 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2023", "DOM"],
+    "exactOptionalPropertyTypes": false
+  },
+  "include": ["src/**/*.ts", "openapi-ts.config.ts"]
+}

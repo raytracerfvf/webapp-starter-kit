@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "web",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["dev"],
+      "port": 3000
+    },
+    {
+      "name": "python-service",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@repo/api-python", "dev"],
+      "port": 8000
+    }
+  ]
+}

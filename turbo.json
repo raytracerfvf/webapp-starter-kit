@@ -1,0 +1,19 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "globalDependencies": ["tsconfig.base.json", ".env"],
+  "tasks": {
+    "codegen": { "outputs": ["i18n/paraglide/**", "src/client/**", ".content-collections/**"] },
+    "build": {
+      "dependsOn": ["^build", "codegen"],
+      "outputs": ["dist/**"],
+      "env": ["VITE_*", "ANALYZE", "APP_VERSION"]
+    },
+    "typecheck": { "dependsOn": ["^typecheck", "codegen"] },
+    "lint": {},
+    "format": { "cache": false },
+    "generate": { "cache": false },
+    "test": { "dependsOn": ["codegen"] },
+    "test:coverage": { "dependsOn": ["codegen"] },
+    "dev": { "dependsOn": ["^codegen", "codegen"], "cache": false, "persistent": true }
+  }
+}

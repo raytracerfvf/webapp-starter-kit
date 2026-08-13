@@ -1,0 +1,17 @@
+language js
+
+// `as` rewrites the type without changing the value: the compiler is told, not
+// shown, and the lie surfaces later as a runtime TypeError somewhere else.
+// Unknown values get decoded with a Zod schema where they enter the trusted
+// model; typed values with wrong types get their types fixed.
+//
+// `as const` stays legal (literal freeze, no lie). `as unknown` stays legal as
+// the honest upcast, and a double cast through it is still caught because the
+// outer assertion matches. Tests are exempted in biome.json.
+TsAsExpression(ty=$type) as $assertion where {
+  not $type <: or {
+    r"^const$",
+    r"^unknown$"
+  },
+  register_diagnostic(span=$assertion, message="Type assertion. Decode unknown input with a schema at the boundary or fix the types; do not cast.", severity="error")
+}

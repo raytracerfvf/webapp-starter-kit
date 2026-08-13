@@ -1,0 +1,17 @@
+---
+title: Erste Schritte
+description: Ein kurzer Überblick über die Basis und ihre wartbaren Grenzen.
+published: true
+---
+
+## Lokale Entwicklung
+
+Kopiere `.env.example`, starte PostgreSQL, führe Migrationen und Seed-Daten aus und starte anschließend den Entwicklungsserver.
+
+## Architektur
+
+Remote-Zustand gehört in TanStack Query, dauerhafter Zustand in PostgreSQL und routenspezifische Bearbeitungssitzungen in abgegrenzte Zustand-Stores.
+
+## Sicherheitsgrenzen
+
+Jede Serverfunktion validiert ihre Eingaben und autorisiert die Aktion innerhalb der Servergrenze. Routenweiterleitungen verbessern die Nutzung, bieten aber keinen Schutz.

@@ -1,0 +1,14 @@
+.git
+.env*
+node_modules
+**/node_modules
+**/dist
+**/.turbo
+**/coverage
+**/.venv
+**/__pycache__
+**/.pytest_cache
+**/.ruff_cache
+**/.content-collections
+.pnpm-store
+apps/web/i18n/paraglide

@@ -1,0 +1,45 @@
+packages:
+  - apps/*
+  - packages/*
+
+catalogMode: prefer
+verifyDepsBeforeRun: false
+minimumReleaseAge: 1440
+minimumReleaseAgeExclude:
+  - "@tanstack/*"
+  - "@inlang/paraglide-js@2.23.2"
+  - "lucide-react@1.30.0"
+  - "posthog-js@1.414.0"
+  - "tsx@4.23.11"
+
+catalog:
+  typescript: 7.0.2
+  zod: 4.4.3
+  "@babel/core": 8.0.1
+  "@types/node": ^24
+  tsx: ^4.23.11
+  drizzle-orm: 0.45.2
+  drizzle-zod: 0.8.3
+  pg: ^8.16.3
+  "@types/pg": ^8.11.0
+  vitest: 4.1.10
+  "@vitest/coverage-v8": 4.1.10
+  "@paralleldrive/cuid2": ^3.3.0
+  '@fontsource-variable/inter': ^5.3.0
+  dotenv-cli: ^11.0.0
+  es-toolkit: ^1.50.0
+  auto-zustand-selectors-hook: 3.0.1
+
+catalogs:
+  react19:
+    react: 19.2.8
+    react-dom: 19.2.8
+    "@types/react": ^19.2
+    "@types/react-dom": ^19.2
+
+allowBuilds:
+  "@biomejs/biome": true
+  "@tailwindcss/oxide": true
+  core-js: false
+  esbuild: true
+  sharp: true

@@ -1,0 +1,14 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "codegen": {
+      "inputs": [
+        "$TURBO_ROOT$/apps/api-python/openapi.json",
+        "openapi-ts.config.ts",
+        "package.json"
+      ],
+      "outputs": ["src/client/**", "dist/**"]
+    }
+  }
+}

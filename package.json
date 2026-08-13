@@ -1,0 +1,49 @@
+{
+  "name": "webapp-starter-kit",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.20.0",
+  "engines": {
+    "node": ">=24.19.0 <25",
+    "pnpm": ">=11.20.0"
+  },
+  "scripts": {
+    "postinstall": "pnpm codegen",
+    "dev": "turbo run dev --filter=@repo/web",
+    "dev:all": "turbo run dev --parallel",
+    "build": "turbo run build",
+    "start": "pnpm --filter @repo/web start",
+    "lint": "biome check . && pnpm lint:react && turbo run lint",
+    "lint:react": "eslint apps/web/src",
+    "format": "biome format --write . && turbo run format",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "test:coverage": "turbo run test:coverage",
+    "check-all": "pnpm lint && pnpm typecheck",
+    "codegen": "turbo run codegen",
+    "codegen:api-client": "turbo run generate",
+    "db:generate": "pnpm --filter @repo/shared db:generate",
+    "db:migrate": "pnpm --filter @repo/shared db:migrate",
+    "db:migrate:deploy": "pnpm --filter @repo/shared db:migrate:deploy",
+    "db:push": "pnpm --filter @repo/shared db:push",
+    "db:reset": "pnpm --filter @repo/shared db:reset",
+    "db:seed": "pnpm --filter @repo/shared db:seed",
+    "db:studio": "pnpm --filter @repo/shared db:studio",
+    "docker:up": "docker compose up -d --wait",
+    "docker:down": "docker compose down",
+    "email:dev": "pnpm --filter @repo/web email:dev",
+    "analyze": "ANALYZE=1 pnpm build"
+  },
+  "devDependencies": {
+    "@babel/core": "catalog:",
+    "@babel/eslint-parser": "8.0.1",
+    "@babel/preset-typescript": "8.0.1",
+    "@biomejs/biome": "2.5.7",
+    "dotenv-cli": "catalog:",
+    "eslint": "10.8.0",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "turbo": "2.10.8",
+    "typescript": "catalog:"
+  }
+}

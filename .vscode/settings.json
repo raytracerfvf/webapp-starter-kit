@@ -1,0 +1,10 @@
+{
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "biomejs.biome",
+  "editor.codeActionsOnSave": { "source.fixAll.biome": "explicit" },
+  "[python]": { "editor.defaultFormatter": "charliermarsh.ruff" },
+  "files.readonlyInclude": { "apps/web/src/routeTree.gen.ts": true },
+  "search.exclude": { "apps/web/src/routeTree.gen.ts": true },
+  "files.watcherExclude": { "**/apps/web/src/routeTree.gen.ts": true }
+}

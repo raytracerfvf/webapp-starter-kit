@@ -1,0 +1,17 @@
+---
+title: Getting started
+description: A quick tour of the baseline and the boundaries that keep it maintainable.
+published: true
+---
+
+## Local development
+
+Copy `.env.example`, start PostgreSQL, run migrations and seed data, then launch the development server.
+
+## Architecture
+
+Remote state belongs to TanStack Query, durable state belongs to PostgreSQL, and route-scoped editing sessions belong to scoped Zustand stores.
+
+## Security boundaries
+
+Every server function validates input and authorizes the action inside the server boundary. Route redirects exist for experience, not protection.

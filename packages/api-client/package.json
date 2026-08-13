@@ -1,0 +1,31 @@
+{
+  "name": "@repo/api-client",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/client/index.d.ts",
+      "import": "./dist/client/index.js"
+    },
+    "./client": {
+      "types": "./dist/client/client/index.d.ts",
+      "import": "./dist/client/client/index.js"
+    }
+  },
+  "scripts": {
+    "codegen": "openapi-ts -f openapi-ts.config.ts && tsc -p tsconfig.build.json",
+    "generate": "pnpm generate:schema && pnpm codegen",
+    "generate:schema": "uv run --directory ../../apps/api-python python scripts/generate_openapi.py",
+    "typecheck": "../../node_modules/.bin/tsc --noEmit",
+    "test": "vitest run --passWithNoTests",
+    "test:coverage": "vitest run --coverage --passWithNoTests"
+  },
+  "devDependencies": {
+    "@hey-api/openapi-ts": "0.99.0",
+    "@types/node": "catalog:",
+    "@vitest/coverage-v8": "catalog:",
+    "typescript": "6.0.2",
+    "vitest": "catalog:"
+  }
+}

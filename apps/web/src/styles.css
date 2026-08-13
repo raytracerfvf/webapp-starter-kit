@@ -1,0 +1,125 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "@fontsource-variable/inter";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --background: oklch(0.985 0.004 250);
+  --foreground: oklch(0.19 0.025 255);
+  --card: oklch(1 0 0);
+  --card-foreground: var(--foreground);
+  --primary: oklch(0.55 0.2 257);
+  --primary-foreground: oklch(0.99 0 0);
+  --muted: oklch(0.95 0.009 250);
+  --muted-foreground: oklch(0.48 0.025 255);
+  --border: oklch(0.9 0.012 250);
+  --destructive: oklch(0.59 0.23 28);
+  --destructive-foreground: oklch(0.99 0 0);
+  --overlay: oklch(0 0 0 / 0.45);
+  --radius: 0.8rem;
+}
+
+.dark {
+  --background: oklch(0.16 0.02 255);
+  --foreground: oklch(0.95 0.009 250);
+  --card: oklch(0.2 0.022 255);
+  --card-foreground: var(--foreground);
+  --primary: oklch(0.72 0.16 255);
+  --primary-foreground: oklch(0.16 0.02 255);
+  --muted: oklch(0.25 0.023 255);
+  --muted-foreground: oklch(0.72 0.02 250);
+  --border: oklch(0.32 0.02 255);
+  --destructive: oklch(0.7 0.19 25);
+  --destructive-foreground: oklch(0.16 0.02 255);
+  --overlay: oklch(0 0 0 / 0.6);
+}
+
+@theme inline {
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-overlay: var(--overlay);
+  --radius-sm: calc(var(--radius) - 0.25rem);
+  --radius-md: calc(var(--radius) - 0.125rem);
+  --radius-lg: var(--radius);
+  --shadow-surface-1: 0 1px 2px oklch(0 0 0 / 0.06), 0 8px 24px oklch(0 0 0 / 0.04);
+  --shadow-surface-2: 0 12px 36px oklch(0 0 0 / 0.12);
+}
+
+@layer base {
+  * { border-color: var(--border); }
+  html { color-scheme: light; }
+  html.dark { color-scheme: dark; }
+  body {
+    min-width: 320px;
+    margin: 0;
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    text-rendering: optimizeLegibility;
+  }
+  button, input, textarea { font: inherit; }
+  :focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+}
+
+/* Loading animations default to a useful static state for reduced motion. */
+.liquid-dot-left { transform: translateX(-16px); }
+.liquid-dot-right { transform: translateX(16px); }
+
+@keyframes liquid-dot-left {
+  0%, 100% { transform: translateX(-16px); }
+  50% { transform: translateX(16px); }
+}
+
+@keyframes liquid-dot-right {
+  0%, 100% { transform: translateX(16px); }
+  50% { transform: translateX(-16px); }
+}
+
+@keyframes route-progress-slide {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(300%); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .liquid-dot-left { animation: liquid-dot-left 2s ease-in-out infinite; }
+  .liquid-dot-right { animation: liquid-dot-right 2s ease-in-out infinite; }
+  .route-progress-indicator { animation: route-progress-slide 1.1s ease-in-out infinite; }
+}
+
+@utility t-display {
+  font-size: clamp(2.5rem, 7vw, 5.5rem);
+  line-height: 0.98;
+  font-weight: 750;
+  letter-spacing: -0.055em;
+}
+
+@utility t-title {
+  font-size: clamp(1.7rem, 3vw, 2.4rem);
+  line-height: 1.12;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+}
+
+@utility t-eyebrow {
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.content-prose { max-width: 72ch; line-height: 1.75; }
+.content-prose h2 { margin-top: 2.5rem; font-size: 1.55rem; font-weight: 700; }
+.content-prose h3 { margin-top: 2rem; font-size: 1.2rem; font-weight: 650; }
+.content-prose a { color: var(--primary); text-decoration: underline; text-underline-offset: 3px; }
+.content-prose code { border-radius: 0.35rem; background: var(--muted); padding: 0.1rem 0.35rem; }

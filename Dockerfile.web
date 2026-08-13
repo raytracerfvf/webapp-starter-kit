@@ -1,0 +1,43 @@
+# syntax=docker/dockerfile:1-labs
+FROM node:24-bookworm-slim AS base
+ENV PNPM_HOME=/pnpm
+ENV PATH=$PNPM_HOME:$PATH
+RUN corepack enable
+WORKDIR /workspace
+
+FROM base AS dependencies
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json turbo.json ./
+# Globbed so the layer adapts when workspaces (e.g. the Python service) are removed.
+COPY --parents apps/*/package.json packages/*/package.json ./
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile --ignore-scripts
+
+FROM dependencies AS build
+# Vite inlines VITE_* at build time; Railway forwards service variables to declared ARGs.
+# APP_VERSION carries the deployed commit (.git is not in the build context).
+ARG VITE_SITE_ORIGIN
+ARG VITE_POSTHOG_KEY
+ARG VITE_SEO_INDEXABLE
+ARG APP_VERSION
+ENV VITE_SITE_ORIGIN=$VITE_SITE_ORIGIN \
+    VITE_POSTHOG_KEY=$VITE_POSTHOG_KEY \
+    VITE_SEO_INDEXABLE=$VITE_SEO_INDEXABLE \
+    APP_VERSION=$APP_VERSION
+RUN test -n "$VITE_SITE_ORIGIN" || { echo "VITE_SITE_ORIGIN build arg is required" >&2; exit 1; }
+COPY . .
+# Through turbo so workspace codegen/build dependencies (api-client) run too.
+RUN pnpm turbo run build --filter=@repo/web
+# --ignore-scripts: the root postinstall needs git, absent from the image.
+RUN pnpm --filter @repo/web deploy --prod --legacy --ignore-scripts /deploy
+
+FROM node:24-bookworm-slim AS runtime
+ENV NODE_ENV=production
+ENV PORT=3000
+WORKDIR /app
+COPY --from=build --chown=node:node /deploy/ ./
+COPY --from=build --chown=node:node /workspace/apps/web/dist ./dist
+COPY --from=build --chown=node:node /workspace/apps/web/server.ts ./server.ts
+USER node
+EXPOSE 3000
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --start-interval=5s --retries=3 \
+  CMD ["node", "-e", "fetch('http://127.0.0.1:3000/api/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+CMD ["node", "server.ts"]

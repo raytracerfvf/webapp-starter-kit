@@ -1,0 +1,358 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.5.7/schema.json",
+  "files": {
+    "includes": [
+      "**",
+      "!**/node_modules",
+      "!**/.venv",
+      "!**/__pycache__",
+      "!**/.pytest_cache",
+      "!**/.ruff_cache",
+      "!**/.pnpm-store",
+      "!**/dist",
+      "!**/.turbo",
+      "!**/coverage",
+      "!**/routeTree.gen.ts",
+      "!**/auth.gen.ts",
+      "!apps/web/src/styles.css",
+      "!apps/web/i18n/paraglide",
+      "!apps/web/i18n/project.inlang/.meta.json",
+      "!apps/web/i18n/project.inlang/cache",
+      "!apps/web/.content-collections",
+      "!apps/api-python/openapi.json",
+      "!packages/api-client/src/client",
+      "!packages/shared/drizzle",
+      "!pnpm-lock.yaml"
+    ]
+  },
+  "plugins": [
+    {
+      "path": "./biome-plugins/no-type-assertion.grit",
+      "includes": ["**", "!**/*.test.ts", "!**/*.test.tsx", "!**/*.test-d.ts"]
+    }
+  ],
+  "formatter": { "enabled": true, "indentStyle": "space", "indentWidth": 2, "lineWidth": 100 },
+  "javascript": {
+    "formatter": { "quoteStyle": "double", "semicolons": "asNeeded", "lineWidth": 80 }
+  },
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": {
+          "level": "on",
+          "options": {
+            "groups": [
+              ":NODE:",
+              ":BLANK_LINE:",
+              [":PACKAGE:", "!@repo/**"],
+              ":BLANK_LINE:",
+              "@repo/**",
+              ":BLANK_LINE:",
+              "@/**",
+              ":BLANK_LINE:",
+              ":PATH:"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "linter": {
+    "enabled": true,
+    "domains": { "react": "recommended" },
+    "rules": {
+      "preset": "recommended",
+      "performance": { "noBarrelFile": "error", "noReExportAll": "error" },
+      "correctness": { "noReactPropAssignments": "error", "noNestedComponentDefinitions": "error" },
+      "nursery": { "noComponentHookFactories": "error" },
+      "style": { "noEnum": "error" },
+      "suspicious": { "noUnknownAtRules": "off" }
+    }
+  },
+  "overrides": [
+    {
+      "includes": [
+        "apps/web/i18n/index.ts",
+        "packages/shared/src/index.ts",
+        "packages/shared/src/db/index.ts",
+        "packages/shared/src/db/schema/index.ts"
+      ],
+      "linter": { "rules": { "performance": { "noBarrelFile": "off", "noReExportAll": "off" } } }
+    },
+    {
+      "includes": ["packages/shared/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "paths": {
+                  "pino": "Shared domain code returns metadata and never owns request logging.",
+                  "react": "packages/shared is framework-free.",
+                  "react-dom": "packages/shared is framework-free."
+                },
+                "patterns": [
+                  {
+                    "group": [
+                      "react/**",
+                      "react-dom/**",
+                      "@tanstack/**",
+                      "@repo/web",
+                      "@repo/web/**"
+                    ],
+                    "message": "packages/shared never imports React, TanStack, or application code."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": [
+        "apps/web/src/**",
+        "!apps/web/src/**/*.test.ts",
+        "!apps/web/src/**/*.test.tsx",
+        "!apps/web/src/**/*.test-d.ts"
+      ],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "paths": {
+                  "@/lib/auth/client": "Auth actions go through the hooks in lib/hooks/use-auth-mutations.ts."
+                },
+                "patterns": [
+                  {
+                    "group": ["@/server/**"],
+                    "message": "Reads and writes go through lib/queries/<domain>.ts."
+                  },
+                  {
+                    "group": ["@repo/shared/db", "@repo/shared/db/**"],
+                    "message": "DB clients are server-only. Import the db from a *.server.ts module (lib/db.server.ts) or use routes/api/**."
+                  },
+                  {
+                    "group": ["@/**/*.server"],
+                    "message": "*.server modules are server-only. Reach them from server functions, function middleware, or routes/api/**."
+                  },
+                  {
+                    "group": ["@tanstack/react-query"],
+                    "importNamePattern": "use[A-Z].*",
+                    "message": "React Query hooks live in lib/hooks/**; components and routes consume named application hooks."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["apps/web/src/lib/hooks/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["@/server/**"],
+                    "message": "Reads and writes go through lib/queries/<domain>.ts."
+                  },
+                  {
+                    "group": ["@repo/shared/db", "@repo/shared/db/**"],
+                    "message": "DB clients are server-only. Import the db from a *.server.ts module (lib/db.server.ts) or use routes/api/**."
+                  },
+                  {
+                    "group": ["@/**/*.server"],
+                    "message": "*.server modules are server-only. Reach them from server functions, function middleware, or routes/api/**."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["apps/web/src/server/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["@tanstack/react-query"],
+                    "importNamePattern": "use[A-Z].*",
+                    "message": "React Query hooks live in lib/hooks/**."
+                  },
+                  {
+                    "group": ["@/server/**"],
+                    "message": "Server-function modules don't import each other; share logic in packages/shared or a lib/** helper."
+                  },
+                  {
+                    "group": ["@/components/**", "@/contexts/**"],
+                    "message": "Move UI/context dependencies behind a component or hook boundary."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["apps/web/src/lib/{utils,constants}/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["@tanstack/react-query"],
+                    "importNamePattern": "use[A-Z].*",
+                    "message": "React Query hooks live in lib/hooks/**."
+                  },
+                  {
+                    "group": ["@/server/**"],
+                    "message": "Reads and writes go through lib/queries/<domain>.ts."
+                  },
+                  {
+                    "group": ["@repo/shared/db", "@repo/shared/db/**"],
+                    "message": "DB clients are server-only. Import the db from a *.server.ts module (lib/db.server.ts) or use routes/api/**."
+                  },
+                  {
+                    "group": ["@/**/*.server"],
+                    "message": "*.server modules are server-only. Pure helpers and route options must stay isomorphic."
+                  },
+                  {
+                    "group": ["@/components/**", "@/contexts/**"],
+                    "message": "Move UI/context dependencies behind a component or hook boundary."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["apps/web/src/lib/queries/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "paths": {
+                  "@/lib/auth/client": "Auth actions go through the hooks in lib/hooks/use-auth-mutations.ts."
+                },
+                "patterns": [
+                  {
+                    "group": ["@tanstack/react-query"],
+                    "importNamePattern": "use[A-Z].*",
+                    "message": "React Query hooks live in lib/hooks/**; query modules define options and imperative API functions."
+                  },
+                  {
+                    "group": ["@repo/shared/db", "@repo/shared/db/**"],
+                    "message": "DB clients are server-only. Query modules call server functions, never the database."
+                  },
+                  {
+                    "group": ["@/**/*.server"],
+                    "message": "*.server modules are server-only. Query modules call server functions, which own their server-side imports."
+                  },
+                  {
+                    "group": ["@/components/**", "@/contexts/**"],
+                    "message": "Move UI/context dependencies behind a component or hook boundary."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": [
+        "apps/web/src/components/**",
+        "!apps/web/src/components/**/*.test.ts",
+        "!apps/web/src/components/**/*.test.tsx"
+      ],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "paths": {
+                  "@/lib/auth/client": "Auth actions go through the hooks in lib/hooks/use-auth-mutations.ts.",
+                  "@tanstack/react-query": "Components consume named hooks from lib/hooks/** instead of importing React Query directly."
+                },
+                "patterns": [
+                  {
+                    "group": ["@/lib/queries/**"],
+                    "message": "Components consume named hooks from lib/hooks/**; route loaders and application hooks own query options."
+                  },
+                  {
+                    "group": ["@/server/**"],
+                    "message": "Reads and writes go through lib/queries/<domain>.ts."
+                  },
+                  {
+                    "group": ["@repo/shared/db", "@repo/shared/db/**"],
+                    "message": "DB clients are server-only. Import the db from a *.server.ts module (lib/db.server.ts) or use routes/api/**."
+                  },
+                  {
+                    "group": ["@/**/*.server"],
+                    "message": "*.server modules are server-only and never reachable from components."
+                  },
+                  {
+                    "group": ["zustand", "zustand/**", "@/lib/store/**"],
+                    "message": "Components read and mutate stores only through hooks exported from @/contexts/**."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["apps/web/src/**/*.server.ts", "apps/web/src/routes/api/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["@tanstack/react-query"],
+                    "importNamePattern": "use[A-Z].*",
+                    "message": "React Query hooks live in lib/hooks/**."
+                  },
+                  {
+                    "group": ["@/server/**"],
+                    "message": "Reads and writes go through lib/queries/<domain>.ts."
+                  },
+                  {
+                    "group": ["@/components/**", "@/contexts/**"],
+                    "message": "Move UI/context dependencies behind a component or hook boundary."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

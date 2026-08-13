@@ -1,0 +1,101 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  DATABASE_URL: postgres://postgres:postgres@localhost:5432/webapp
+  BETTER_AUTH_SECRET: ci-only-secret-that-is-longer-than-thirty-two-characters
+  BETTER_AUTH_URL: http://localhost:3000
+  VITE_SITE_ORIGIN: http://localhost:3000
+  CI: true
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      # pnpm must exist before setup-node resolves the pnpm store for cache: pnpm.
+      - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      # Restore before install so postinstall codegen can hit the turbo cache.
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .turbo
+          key: turbo-quality-${{ runner.os }}-${{ github.sha }}
+          restore-keys: turbo-quality-${{ runner.os }}-
+      - run: pnpm install --frozen-lockfile
+      # turbo lint/typecheck include the Python service's uv tasks; skips when the Python service is gone.
+      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+        if: hashFiles('apps/api-python/uv.lock') != ''
+        with:
+          version: "0.12.2"
+          enable-cache: true
+          cache-dependency-glob: apps/api-python/uv.lock
+      - run: uv sync --directory apps/api-python --locked
+        if: hashFiles('apps/api-python/uv.lock') != ''
+      - run: pnpm check-all
+      # Generated-artifact drift: regenerate in place, then fail on any diff. The
+      # OpenAPI pair is guarded so removing the Python service does not break CI.
+      - run: pnpm db:generate
+      - run: git diff --exit-code -- packages/shared/drizzle
+      - run: uv run --directory apps/api-python python scripts/generate_openapi.py
+        if: hashFiles('apps/api-python/uv.lock') != ''
+      - run: git diff --exit-code -- apps/api-python/openapi.json
+        if: hashFiles('apps/api-python/uv.lock') != ''
+
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_DB: webapp
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d webapp"
+          --health-interval 2s
+          --health-timeout 5s
+          --health-retries 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .turbo
+          key: turbo-test-${{ runner.os }}-${{ github.sha }}
+          restore-keys: turbo-test-${{ runner.os }}-
+      - run: pnpm install --frozen-lockfile
+      # turbo run test includes the Python service's pytest; skips when the Python service is gone.
+      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+        if: hashFiles('apps/api-python/uv.lock') != ''
+        with:
+          version: "0.12.2"
+          enable-cache: true
+          cache-dependency-glob: apps/api-python/uv.lock
+      - run: uv sync --directory apps/api-python --locked
+        if: hashFiles('apps/api-python/uv.lock') != ''
+      - run: pnpm db:migrate && pnpm db:seed
+      - run: pnpm test
+      - run: pnpm build
