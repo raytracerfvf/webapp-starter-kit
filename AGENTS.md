@@ -24,6 +24,7 @@ pnpm check-all        # biome format + lint (incl. lint:react) + typecheck — n
 
 pnpm db:generate      pnpm db:migrate       pnpm db:migrate:deploy
 pnpm db:push          pnpm db:reset         pnpm db:seed          pnpm db:studio
+pnpm admin:promote <email>   # grant the admin role to an existing user (first-admin bootstrap/recovery)
 
 pnpm codegen          # Node-only: paraglide, content, TS client from committed openapi.json
 pnpm codegen:api-client  # uv: regenerate openapi.json from FastAPI, then the TS client
@@ -119,6 +120,9 @@ packages/shared/src/
 - A `createServerFn` is a directly callable RPC security boundary. Authenticate and authorize (including
   resource ownership) inside function middleware/handlers; route `beforeLoad` redirects are UX, not
   protection. Validate every input with `.validator(...)`.
+- Admin-only server functions carry `requireAdminMiddleware`. Roles are comma-separated text on `user.role`
+  (Better Auth admin plugin); check them only via `hasRole`/`hasAdminRole`, never raw string comparison
+  (see the auth-and-email skill).
 - `lib/queries/` is the only importer of `@/server/**` *(enforced: Biome noRestrictedImports)*.
 - UI never imports DB clients *(enforced: Biome — `@repo/shared/db` allowed only in `*.server.ts` and
   `routes/api/**`)*.

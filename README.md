@@ -20,14 +20,18 @@ the same contracts for agent- and human-written code.
 
 An included reference feature demonstrates these patterns end to end.
 
-## How it is opinionated
+## The opinions
 
-Types run from the database schema to the UI, and untrusted values are parsed once where they enter.
-Dependencies point one way: components use hooks, hooks use query modules, query modules call server
-functions, and only server code touches the database. Every server function validates its own input and
-checks its own authorization, because route redirects are not access control. Each kind of state has one
-owner. Schemas change through reviewed migrations. Lint rules and build checks enforce all of it, so nobody
-has to remember it.
+- **Types start with schemas.** Zod defines runtime contracts, Drizzle defines storage, and TypeScript types
+  are inferred from both. Untrusted data is validated once, where it enters.
+- **Data follows one path.** Components → hooks → query modules → server functions → domain operations →
+  database. Each layer has one job and a narrow API.
+- **Boundaries enforce trust.** Server functions validate and authorize every call. Middleware handles CSRF,
+  request context, logging, and safe error responses.
+- **State has one owner.** Query owns remote data, the router owns URL state, React Hook Form owns forms,
+  Zustand owns complex working state, and PostgreSQL owns durable data. State is not mirrored between them.
+- **The rules are enforced.** Lint rules, server-only checks, migrations, and drift checks keep the boundaries
+  intact.
 
 ## What's included
 

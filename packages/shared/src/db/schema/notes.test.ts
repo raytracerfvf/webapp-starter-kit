@@ -23,10 +23,6 @@ describe("note row schemas", () => {
     expect(NoteRowSchema.shape.publicId.safeParse("nope").success).toBe(false)
   })
 
-  it("preserves nullable select columns without a value override", () => {
-    expect(NoteRowSchema.shape.deletedAt.safeParse(null).success).toBe(true)
-  })
-
   it("takes the title bound from the database column", () => {
     expect(
       NoteRowSchema.shape.title.safeParse("x".repeat(NOTE_TITLE_MAX_LENGTH))

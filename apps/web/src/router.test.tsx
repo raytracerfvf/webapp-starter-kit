@@ -31,6 +31,16 @@ afterEach(() => {
 })
 
 describe("router loading integration", () => {
+  it("uses the project pending timing policy", async () => {
+    const { getRouter } = await import("./router")
+    const router = getRouter()
+
+    expect({
+      delay: router.options.defaultPendingMs,
+      minimumDuration: router.options.defaultPendingMinMs,
+    }).toEqual({ delay: 200, minimumDuration: 500 })
+  })
+
   it("hydrates prefetched data through the router QueryClient provider", async () => {
     const { getRouter } = await import("./router")
     const router = getRouter()
@@ -64,8 +74,6 @@ describe("router loading integration", () => {
       },
     )
 
-    expect(router.options.defaultPendingMs).toBe(200)
-    expect(router.options.defaultPendingMinMs).toBe(500)
     expect(view.result.current.client).toBe(queryClient)
     expect(view.result.current.result).toBe("prefetched")
     expect(queryFn).not.toHaveBeenCalled()

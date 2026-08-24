@@ -2,13 +2,21 @@ import "@tanstack/react-start/server-only"
 
 import { betterAuth } from "better-auth"
 import { drizzleAdapter } from "better-auth/adapters/drizzle"
+import { createAuthMiddleware, getSessionFromCtx } from "better-auth/api"
+import { admin } from "better-auth/plugins/admin"
 import { magicLink } from "better-auth/plugins/magic-link"
 import { tanstackStartCookies } from "better-auth/tanstack-start"
+
+import { DEFAULT_ROLE, UserRole } from "@repo/shared"
 
 import { db } from "../db.server"
 import { mailer } from "../email/mailer.server"
 import { serverEnv } from "../env/server"
 import { getRequestLogger } from "../middleware/request-context.server"
+import {
+  enforceBanUserPolicy,
+  enforceSetRolePolicy,
+} from "./admin-write-policy"
 
 const socialProviders = {
   ...(serverEnv.GOOGLE_CLIENT_ID && serverEnv.GOOGLE_CLIENT_SECRET
@@ -63,6 +71,21 @@ export const auth = betterAuth({
       "/sign-in/social": { window: 60, max: 10 },
     },
   },
+  hooks: {
+    before: createAuthMiddleware(async (ctx) => {
+      if (ctx.path === "/admin/set-role") {
+        const session = await getSessionFromCtx(ctx)
+        return {
+          context: {
+            body: enforceSetRolePolicy(ctx.body, session?.user.id ?? null),
+          },
+        }
+      }
+      if (ctx.path === "/admin/ban-user") {
+        return { context: { body: enforceBanUserPolicy(ctx.body) } }
+      }
+    }),
+  },
   databaseHooks: {
     user: {
       create: {
@@ -84,6 +107,7 @@ export const auth = betterAuth({
       expiresIn: 10 * 60,
       sendMagicLink: ({ email, url }) => mailer.sendMagicLink(email, url),
     }),
+    admin({ defaultRole: DEFAULT_ROLE, adminRoles: [UserRole.ADMIN] }),
     tanstackStartCookies(),
   ],
   trustedOrigins: [serverEnv.BETTER_AUTH_URL],

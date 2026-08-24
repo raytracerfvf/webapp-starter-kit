@@ -13,11 +13,14 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as ApiHealthRouteImport } from './routes/api/health'
 import { Route as ApiPythonServiceDemoRouteImport } from './routes/api/python-service-demo'
 import { Route as DocsIndexRouteImport } from './routes/docs/index'
 import { Route as NPublicIdRouteImport } from './routes/n.$publicId'
 import { Route as NotesNewRouteImport } from './routes/notes.new'
+import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
+import { Route as AuthenticatedAdminUserIdRouteImport } from './routes/_authenticated/admin/$userId'
 import { Route as AuthenticatedNotesIndexRouteImport } from './routes/_authenticated/notes/index'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as ApiInternalAuthCleanupRouteImport } from './routes/api/internal/auth-cleanup'
@@ -40,6 +43,11 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthenticatedRoute,
 } as any)
 const ApiHealthRoute = ApiHealthRouteImport.update({
   id: '/api/health',
@@ -66,6 +74,17 @@ const NotesNewRoute = NotesNewRouteImport.update({
   path: '/notes/new',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedAdminRoute,
+} as any)
+const AuthenticatedAdminUserIdRoute =
+  AuthenticatedAdminUserIdRouteImport.update({
+    id: '/$userId',
+    path: '/$userId',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedNotesIndexRoute = AuthenticatedNotesIndexRouteImport.update({
   id: '/notes/',
   path: '/notes/',
@@ -86,13 +105,16 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/api/health': typeof ApiHealthRoute
   '/api/python-service-demo': typeof ApiPythonServiceDemoRoute
   '/n/$publicId': typeof NPublicIdRoute
   '/notes/new': typeof NotesNewRoute
   '/docs/': typeof DocsIndexRoute
+  '/admin/$userId': typeof AuthenticatedAdminUserIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/internal/auth-cleanup': typeof ApiInternalAuthCleanupRoute
+  '/admin/': typeof AuthenticatedAdminIndexRoute
   '/notes/': typeof AuthenticatedNotesIndexRoute
 }
 export interface FileRoutesByTo {
@@ -104,8 +126,10 @@ export interface FileRoutesByTo {
   '/n/$publicId': typeof NPublicIdRoute
   '/notes/new': typeof NotesNewRoute
   '/docs': typeof DocsIndexRoute
+  '/admin/$userId': typeof AuthenticatedAdminUserIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/internal/auth-cleanup': typeof ApiInternalAuthCleanupRoute
+  '/admin': typeof AuthenticatedAdminIndexRoute
   '/notes': typeof AuthenticatedNotesIndexRoute
 }
 export interface FileRoutesById {
@@ -114,13 +138,16 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/api/health': typeof ApiHealthRoute
   '/api/python-service-demo': typeof ApiPythonServiceDemoRoute
   '/n/$publicId': typeof NPublicIdRoute
   '/notes/new': typeof NotesNewRoute
   '/docs/': typeof DocsIndexRoute
+  '/_authenticated/admin/$userId': typeof AuthenticatedAdminUserIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/internal/auth-cleanup': typeof ApiInternalAuthCleanupRoute
+  '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/notes/': typeof AuthenticatedNotesIndexRoute
 }
 export interface FileRouteTypes {
@@ -129,13 +156,16 @@ export interface FileRouteTypes {
     | '/'
     | '/robots.txt'
     | '/sitemap.xml'
+    | '/admin'
     | '/api/health'
     | '/api/python-service-demo'
     | '/n/$publicId'
     | '/notes/new'
     | '/docs/'
+    | '/admin/$userId'
     | '/api/auth/$'
     | '/api/internal/auth-cleanup'
+    | '/admin/'
     | '/notes/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -147,8 +177,10 @@ export interface FileRouteTypes {
     | '/n/$publicId'
     | '/notes/new'
     | '/docs'
+    | '/admin/$userId'
     | '/api/auth/$'
     | '/api/internal/auth-cleanup'
+    | '/admin'
     | '/notes'
   id:
     | '__root__'
@@ -156,13 +188,16 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/robots.txt'
     | '/sitemap.xml'
+    | '/_authenticated/admin'
     | '/api/health'
     | '/api/python-service-demo'
     | '/n/$publicId'
     | '/notes/new'
     | '/docs/'
+    | '/_authenticated/admin/$userId'
     | '/api/auth/$'
     | '/api/internal/auth-cleanup'
+    | '/_authenticated/admin/'
     | '/_authenticated/notes/'
   fileRoutesById: FileRoutesById
 }
@@ -210,6 +245,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/admin': {
+      id: '/_authenticated/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/api/health': {
       id: '/api/health'
       path: '/api/health'
@@ -245,6 +287,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof NotesNewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/admin/': {
+      id: '/_authenticated/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/$userId': {
+      id: '/_authenticated/admin/$userId'
+      path: '/$userId'
+      fullPath: '/admin/$userId'
+      preLoaderRoute: typeof AuthenticatedAdminUserIdRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/notes/': {
       id: '/_authenticated/notes/'
       path: '/notes'
@@ -269,11 +325,26 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminUserIdRoute: typeof AuthenticatedAdminUserIdRoute
+  AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
+}
+
+const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminUserIdRoute: AuthenticatedAdminUserIdRoute,
+  AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
+}
+
+const AuthenticatedAdminRouteWithChildren =
+  AuthenticatedAdminRoute._addFileChildren(AuthenticatedAdminRouteChildren)
+
 interface AuthenticatedRouteChildren {
+  AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
   AuthenticatedNotesIndexRoute: typeof AuthenticatedNotesIndexRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
   AuthenticatedNotesIndexRoute: AuthenticatedNotesIndexRoute,
 }
 

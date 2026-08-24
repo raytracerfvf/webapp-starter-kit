@@ -18,12 +18,34 @@ user-invocable: false
 
 ## Generated schema
 
-Generate Better Auth's Drizzle schema (`packages/shared/src/db/schema/auth.gen.ts`) with the pinned CLI version
-and never hand-edit it *(enforced: write-guard hook)*. Extend application-owned profile and preference data in
-separate tables. Generate and review a Drizzle migration after each regeneration.
+Generate Better Auth's Drizzle schema (`packages/shared/src/db/schema/auth.gen.ts`) with the `auth` CLI at the
+pinned better-auth version and never hand-edit it *(enforced: write-guard hook)*. The CLI cannot load the
+runtime config, so it reads `apps/web/auth-cli.config.ts` — keep that mirror's plugins and schema-affecting
+options in sync with `auth.server.ts`. Generate and review a Drizzle migration after each regeneration.
+
+```bash
+pnpm dotenv -e .env -- pnpm dlx auth@<pinned version> generate \
+  --config apps/web/auth-cli.config.ts --output packages/shared/src/db/schema/auth.gen.ts --yes
+```
+
+Extend application-owned profile and preference data in separate tables.
 
 The CLI emits naive `timestamp` columns — a deliberate trade, since keeping the file regenerable beats forking
 it for `timestamptz`, and app and DB both run UTC. Application-owned tables use `timestamptz`.
+
+## Roles and admin access
+
+- Roles are comma-separated text on `user.role`. The role model lives in
+  `packages/shared/src/domain/admin/types.ts`: read through `hasRole`/`hasAdminRole`, write through
+  `normalizeRoles`/`serializeRoles`, and pass `defaultRole`/`adminRoles` to `admin()` from the same constants.
+- `requireAdminMiddleware` guards admin-only server functions; the `/admin` route redirect is UX only.
+- App-defined admin server functions are read-only. Role, ban, and impersonation writes call Better Auth's
+  own `/api/auth` admin endpoints, validated server-side by `lib/auth/admin-write-policy.ts` (wired through
+  `hooks.before`) — disabled UI controls mirror that policy but are not the enforcement.
+- Blocking is the plugin's ban: it revokes sessions and blocks every sign-in method until lifted. Role and
+  ban revocations lag already-issued cookies by up to the 5-minute cookie cache.
+- Bootstrap or recover an admin with `pnpm admin:promote <email>` after the target signs in once; the local
+  seed user is an admin already.
 
 ## Security invariants
 

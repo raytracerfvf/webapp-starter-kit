@@ -1,6 +1,8 @@
 import { createMiddleware } from "@tanstack/react-start"
 
-import { throwUnauthorized } from "../errors.server"
+import { hasAdminRole } from "@repo/shared"
+
+import { throwForbidden, throwUnauthorized } from "../errors.server"
 import { setRequestUserId } from "../middleware/request-context.server"
 import { readServerSession } from "./session.server"
 
@@ -12,3 +14,10 @@ export const requireAuthenticatedMiddleware = createMiddleware().server(
     return next({ context: { userId: session.user.id, user: session.user } })
   },
 )
+
+export const requireAdminMiddleware = createMiddleware()
+  .middleware([requireAuthenticatedMiddleware])
+  .server(({ next, context }) => {
+    if (!hasAdminRole(context.user)) throwForbidden("Admin access required")
+    return next()
+  })
