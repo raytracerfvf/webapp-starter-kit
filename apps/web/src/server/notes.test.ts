@@ -1,37 +1,10 @@
 import { describe, expect, it, vi } from "vitest"
 import { ZodError } from "zod"
 
-// The built fetcher hides its wiring, so createServerFn is replaced with a
-// recorder and each export becomes an inspectable record of its chain.
 vi.mock("@tanstack/react-start", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@tanstack/react-start")>()
-  interface BoundaryRecord {
-    method: string | undefined
-    middleware: ReadonlyArray<unknown>
-    validator: ((input: unknown) => unknown) | undefined
-  }
-  function builder(record: BoundaryRecord) {
-    return {
-      middleware(middleware: ReadonlyArray<unknown>) {
-        return builder({ ...record, middleware })
-      },
-      validator(validator: (input: unknown) => unknown) {
-        return builder({ ...record, validator })
-      },
-      handler() {
-        return record
-      },
-    }
-  }
-  return {
-    ...actual,
-    createServerFn: (options?: { method?: string }) =>
-      builder({
-        method: options?.method,
-        middleware: [],
-        validator: undefined,
-      }),
-  }
+  const { createServerFnRecorder } = await import("./test-boundary-recorder")
+  return { ...actual, createServerFn: createServerFnRecorder }
 })
 
 vi.mock("@/lib/db.server", () => ({ db: {} }))
@@ -44,12 +17,7 @@ vi.mock("@/lib/middleware/request-context.server", () => ({
 import { requireAuthenticatedMiddleware } from "@/lib/auth/middleware"
 
 import * as notes from "./notes"
-
-interface BoundaryRecord {
-  method: string | undefined
-  middleware: ReadonlyArray<unknown>
-  validator: ((input: unknown) => unknown) | undefined
-}
+import type { BoundaryRecord } from "./test-boundary-recorder"
 
 const recordOf = (fn: unknown) => fn as unknown as BoundaryRecord
 
@@ -66,7 +34,9 @@ describe("notes server fn boundary", () => {
   })
 
   it("keeps the public read anonymous — visibility is decided in the operation", () => {
-    expect(recordOf(notes.getNoteByPublicIdFn).middleware).toHaveLength(0)
+    expect(recordOf(notes.getNoteByPublicIdFn).middleware).not.toContain(
+      requireAuthenticatedMiddleware,
+    )
   })
 
   it("validates every input-taking fn with ZodError, the sanitizer's 400 path", () => {

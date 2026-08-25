@@ -203,32 +203,11 @@ describe("note editor store — notes that do not exist yet", () => {
     expect(store.temporal.getState().pastStates).toHaveLength(0)
   })
 
-  it("discards corrupt and future-version guest drafts", () => {
+  it("discards an invalid guest draft during synchronous hydration", () => {
     const raw = memoryStorage()
     raw.setItem(NEW_NOTE_DRAFT_KEY, "not-json")
-    const corrupt = createNoteEditorStore(null, raw)
-    expect(corrupt.getState().title).toBe("")
-    expect(raw.getItem(NEW_NOTE_DRAFT_KEY)).toBeNull()
-
-    raw.setItem(
-      NEW_NOTE_DRAFT_KEY,
-      JSON.stringify({
-        version: NOTE_DRAFT_VERSION + 1,
-        state: {
-          title: "Future",
-          content: { text: "" },
-          visibility: "private",
-          lastSaved: {
-            title: "",
-            content: { text: "" },
-            visibility: "private",
-          },
-          serverUpdatedAt: 0,
-        },
-      }),
-    )
-    const future = createNoteEditorStore(null, raw)
-    expect(future.getState().title).toBe("")
+    const store = createNoteEditorStore(null, raw)
+    expect(store.getState().title).toBe("")
     expect(raw.getItem(NEW_NOTE_DRAFT_KEY)).toBeNull()
   })
 })

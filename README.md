@@ -4,11 +4,11 @@
 
 Inspired by the architecture that powers [zenrockets.com](https://zenrockets.com).
 
-The thing nobody tells you about web applications, back when everything is still greenfield and pure
+*The thing nobody tells you about web applications, back when everything is still greenfield and pure
 possibility, is that every single one of them eventually has to decide who owns which piece of state, who is
 allowed to talk to the database, and what happens to the data when the schema changes; and that you will make
 these decisions either now, calmly, with tests, or later, at approximately 2 a.m., without them. This starter
-makes them now.
+makes them now.*
 
 An opinionated TanStack Start starter with enforced boundaries, typed data access, authentication, state
 ownership, database evolution, CI, and Railway deployment, designed for AI-assisted development.
@@ -20,21 +20,26 @@ the same contracts for agent- and human-written code.
 
 An included reference feature demonstrates these patterns end to end.
 
-## How it is opinionated
+## The opinions
 
-Types run from the database schema to the UI, and untrusted values are parsed once where they enter.
-Dependencies point one way: components use hooks, hooks use query modules, query modules call server
-functions, and only server code touches the database. Every server function validates its own input and
-checks its own authorization, because route redirects are not access control. Each kind of state has one
-owner. Schemas change through reviewed migrations. Lint rules and build checks enforce all of it, so nobody
-has to remember it.
+- **Types start with schemas.** Zod defines runtime contracts, Drizzle defines storage, and TypeScript types
+  are inferred from both. Untrusted data is validated once, where it enters.
+- **Data follows one path.** Components → hooks → query modules → server functions → domain operations →
+  database. Each layer has one job and a narrow API.
+- **Boundaries enforce trust.** Server functions validate and authorize every call. Middleware handles CSRF,
+  request context, logging, and safe error responses.
+- **State has one owner.** Query owns remote data, the router owns URL state, React Hook Form owns forms,
+  Zustand owns complex working state, and PostgreSQL owns durable data. State is not mirrored between them.
+- **The rules are enforced.** Lint rules, server-only checks, migrations, and drift checks keep the boundaries
+  intact.
 
 ## What's included
 
 - **Runtime** — SSR, file routing, loader prefetching, Query hydration, and route-level loading, error, and
   not-found states
 - **Auth and email** — Better Auth magic links, PostgreSQL sessions, rate limits, optional Google and GitHub
-  OAuth, React Email templates, local log delivery, optional Resend
+  OAuth, a role-based admin area with user management, bans, and impersonation, React Email templates, local
+  log delivery, optional Resend
 - **Data** — Drizzle schemas and generated migrations, framework-free domain operations, versioned JSONB,
   resumable backfills
 - **State** — shared Query definitions for loaders and components, centralized mutation and cache handling,
@@ -81,6 +86,8 @@ pnpm dev
 `pnpm check-all && pnpm test` is the completion gate. Other common tasks: `pnpm build`, `pnpm db:generate`,
 `pnpm db:migrate`, `pnpm db:seed`, `pnpm codegen`, `pnpm email:dev`, `pnpm analyze`. See
 [AGENTS.md](./AGENTS.md) for the full command list and the repository map.
+
+To bootstrap the first admin, sign in once, then run `pnpm admin:promote <email>`.
 
 CI runs formatting, architecture linting, type checks, tests, production builds, and generated-artifact drift
 checks on pull requests and `main`.

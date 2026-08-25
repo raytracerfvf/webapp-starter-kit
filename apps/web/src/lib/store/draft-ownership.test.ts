@@ -18,25 +18,19 @@ function seedDrafts(storage: Storage) {
 }
 
 describe("draft ownership", () => {
-  it("leaves drafts alone while signed out", () => {
+  it.each([
+    { label: "while signed out", userId: null, establishOwner: false },
+    { label: "on the first sign-in", userId: "user-a", establishOwner: false },
+    {
+      label: "for the same returning account",
+      userId: "user-a",
+      establishOwner: true,
+    },
+  ])("keeps drafts $label", ({ userId, establishOwner }) => {
     const storage = memoryStorage()
+    if (establishOwner) reconcileDraftOwner(storage, "user-a")
     seedDrafts(storage)
-    reconcileDraftOwner(storage, null)
-    expect(storage.getItem(NEW_NOTE_DRAFT_KEY)).toBe("anonymous draft")
-  })
-
-  it("adopts anonymous drafts on the first sign-in", () => {
-    const storage = memoryStorage()
-    seedDrafts(storage)
-    reconcileDraftOwner(storage, "user-a")
-    expect(storage.getItem(NEW_NOTE_DRAFT_KEY)).toBe("anonymous draft")
-  })
-
-  it("keeps drafts for the same returning account", () => {
-    const storage = memoryStorage()
-    reconcileDraftOwner(storage, "user-a")
-    seedDrafts(storage)
-    reconcileDraftOwner(storage, "user-a")
+    reconcileDraftOwner(storage, userId)
     expect(storage.getItem(NEW_NOTE_DRAFT_KEY)).toBe("anonymous draft")
   })
 

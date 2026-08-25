@@ -1,10 +1,40 @@
 ---
 name: testing
-description: Write and organize tests across unit, store, component, server, type-level, drift, and browser layers. Use before adding or restructuring tests, or when a test passes alone but fails in the full Vitest suite.
+description: Write, organize, and review concise tests around feature behavior, architectural boundaries, and regressions across unit, store, component, server, type-level, and drift layers. Use before adding, restructuring, or auditing tests, or when a test passes alone but fails in the full Vitest suite.
 user-invocable: false
 ---
 
 # Testing
+
+## Strategy
+
+Start from a feature risk, architectural boundary, or regression — never from a file, function, or coverage
+gap. Name the behavior that must remain true, then prove it at the smallest layer that owns it. Give each
+behavior one primary test home; add another layer only when that integration boundary can fail independently.
+
+Before adding a test, ask:
+
+1. What user-visible behavior, security property, data invariant, or past failure does it protect?
+2. What is the lowest layer that can prove it without mocking the subject itself?
+3. Would this test catch a realistic defect that the existing suite would miss?
+
+If those answers are unclear, do not add the test. Bug fixes get the smallest regression test that fails before
+the fix. Prefer table-driven cases for input variants and one coherent lifecycle test over many setup-heavy
+micro-tests.
+
+Do not test:
+
+- pass-through wrappers, constants, type-only aliases, or one-line derivations;
+- framework, library, or generated-code behavior the project does not customize;
+- the same validation rule at schema, server, hook, and component layers;
+- internal element counts, object shape, call order, or exact timing unless they are a deliberate contract or
+  named regression;
+- large snapshots that obscure which behavior matters.
+
+At a boundary, test the boundary's responsibility. A shared schema owns validation cases; a server-function
+test proves the validator is attached and authorization middleware is present; a component test proves the
+user can complete the feature and receives useful feedback. Do not repeat the schema's case table in every
+consumer.
 
 ## Layers
 
@@ -13,7 +43,6 @@ user-invocable: false
 - **Component/provider** — hooks, isolation, rendering, forms, accessibility, cleanup.
 - **Server** — validation, auth and authorization, transactions, error sanitization, request context.
 - **Build/contract** — generated drift, type inference, server-only boundaries, React Compiler output, bundles.
-- **Browser** — only when multi-page auth, navigation, or hydration behavior justifies the runtime cost.
 
 Use `packages/shared/src/db/test-db.ts` for real SQL domain tests, and the nearest test in the same layer as a
 style reference.
@@ -38,7 +67,8 @@ style reference.
 
 ## Which matrix applies
 
-Each area skill closes with its own required-test list, and those lists are authoritative:
+Each area skill closes with a required-test list. Treat it as a risk catalog for behavior changed in that area,
+not a requirement to create a separate test for every listed item or touched layer:
 
 | Area | Skill |
 |---|---|
@@ -49,14 +79,13 @@ Each area skill closes with its own required-test list, and those lists are auth
 | Correlation, log privacy | `logging` |
 | Auth flows, email | `auth-and-email` |
 
-A change spanning two areas needs both matrices. A bug fix needs the smallest test that would have failed
-before the fix — not a new matrix.
+A cross-cutting change may need tests from more than one matrix only when each boundary can fail independently.
+Reuse an existing higher-signal test when it already proves the behavior.
 
-## Browser mode
+## Browser automation
 
-Not yet warranted. Add it when a concrete critical path demands it, starting with auth, SSR hydration,
-navigation and search state, draft recovery, and one full CRUD flow. Keep email and OAuth behind local test
-modes so browser tests never need production keys, and build fixtures through supported setup rather than
-demo routes or seeded records.
+Browser automation is outside the current project strategy. Do not add Playwright, Cypress, or another browser
+runner without an explicit architecture decision and a concrete critical flow that the existing layers cannot
+prove economically.
 
 Refs: `apps/web/vitest.config.ts` · `packages/shared/vitest.config.ts`.

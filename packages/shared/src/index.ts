@@ -1,4 +1,6 @@
 export * from "./domain/access-control"
+export * from "./domain/admin/operations"
+export * from "./domain/admin/types"
 export * from "./domain/auth/operations"
 export * from "./domain/enums"
 export * from "./domain/notes/operations"

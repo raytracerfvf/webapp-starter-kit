@@ -27,6 +27,7 @@
     "db:push": "node --import ../../scripts/with-env.mjs ./node_modules/drizzle-kit/bin.cjs push",
     "db:reset": "tsx --env-file-if-exists=../../.env scripts/db-reset.ts",
     "db:seed": "tsx --env-file-if-exists=../../.env seed/seed.ts",
+    "admin:promote": "tsx --env-file-if-exists=../../.env scripts/promote-admin.ts",
     "db:studio": "node --import ../../scripts/with-env.mjs ./node_modules/drizzle-kit/bin.cjs studio"
   },
   "dependencies": {

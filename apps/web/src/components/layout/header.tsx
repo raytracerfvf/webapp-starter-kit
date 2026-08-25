@@ -3,6 +3,8 @@ import { LogOut, Moon, Sun } from "lucide-react"
 import { useTheme } from "next-themes"
 import { useState } from "react"
 
+import { hasAdminRole } from "@repo/shared"
+
 import { SignInDialog } from "@/components/auth/sign-in-dialog"
 import { Button } from "@/components/ui/button"
 import { getLocale, locales, m, setLocale } from "@/i18n"
@@ -11,6 +13,7 @@ import { useSignOutMutation } from "@/lib/hooks/use-auth-mutations"
 import { pageWidth } from "@/lib/ui-styles"
 import { cn } from "@/lib/utils/cn"
 
+import { ImpersonationBanner } from "./impersonation-banner"
 import { NavigationProgress } from "./navigation-progress"
 
 const localeLabels = {
@@ -36,6 +39,7 @@ export function Header() {
   return (
     <>
       <header className="sticky top-0 z-30 border-b bg-background/85 backdrop-blur-xl">
+        <ImpersonationBanner />
         <div
           className={cn(
             pageWidth,
@@ -52,6 +56,11 @@ export function Header() {
             <Button asChild variant="ghost">
               <Link to="/docs">{m.nav_docs()}</Link>
             </Button>
+            {hasAdminRole(auth.user) ? (
+              <Button asChild variant="ghost">
+                <Link to="/admin">{m.nav_admin()}</Link>
+              </Button>
+            ) : null}
             {auth.isAuthenticated ? (
               <Button asChild variant="ghost">
                 <Link to="/notes">{m.nav_notes()}</Link>

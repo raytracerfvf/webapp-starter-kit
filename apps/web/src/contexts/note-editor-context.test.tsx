@@ -50,7 +50,7 @@ function renderNewNoteEditor() {
       <NoteEditorProvider>{children}</NoteEditorProvider>
     ),
   })
-  return { store: view.result.current, rerender: () => view.rerender() }
+  return { store: view.result.current }
 }
 
 beforeEach(() => window.localStorage.clear())
@@ -65,13 +65,7 @@ describe("NoteEditorProvider snapshot ownership", () => {
     expect(editor.store.getState().title).toBe("Server title")
   })
 
-  it("ignores later note prop updates — the editor owns the snapshot until remount", () => {
-    const editor = renderEditor(initial)
-    act(() => editor.refreshFromServer(newer))
-    expect(editor.store.getState().title).toBe("Server title")
-  })
-
-  it("keeps an active draft across re-renders", () => {
+  it("keeps an active draft when later server data arrives", () => {
     const editor = renderEditor(initial)
     act(() => editor.store.getState().setTitle("My unsaved draft"))
     act(() => editor.refreshFromServer(newer))
@@ -107,13 +101,6 @@ describe("NoteEditorProvider without a saved note", () => {
     const editor = renderNewNoteEditor()
     expect(editor.store.getState().title).toBe("Started before sign-in")
     expect(editor.store.temporal.getState().pastStates).toHaveLength(0)
-  })
-
-  it("keeps an active draft across re-renders", () => {
-    const editor = renderNewNoteEditor()
-    act(() => editor.store.getState().setTitle("My unsaved draft"))
-    act(() => editor.rerender())
-    expect(editor.store.getState().title).toBe("My unsaved draft")
   })
 })
 

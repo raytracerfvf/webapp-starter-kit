@@ -1,6 +1,7 @@
 import type { DrizzleExecutor } from "../src/db/client"
 import { user } from "../src/db/schema/auth.gen"
 import { NOTE_SCHEMA_VERSION, notes } from "../src/db/schema/notes"
+import { serializeRoles, UserRole } from "../src/domain/admin/types"
 import { NoteVisibility } from "../src/domain/enums"
 import { NotePublicIdSchema } from "../src/domain/public-id"
 
@@ -15,6 +16,7 @@ export async function ensureSeedUser(db: DrizzleExecutor) {
       name: "Starter User",
       email: "starter@example.test",
       emailVerified: true,
+      role: serializeRoles([UserRole.ADMIN]),
     })
     .onConflictDoNothing({ target: user.id })
     .returning()

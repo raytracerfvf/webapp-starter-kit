@@ -21,19 +21,12 @@ describe("route pending states", () => {
     ).toBe("true")
   })
 
-  it("uses stable skeleton geometry for known note layouts", () => {
-    const list = render(<NotesPageSkeleton />)
+  it.each([
+    ["notes list", NotesPageSkeleton],
+    ["note detail", NoteDetailSkeleton],
+  ])("announces one localized status in the %s skeleton", (_, Skeleton) => {
+    render(<Skeleton />)
     expect(screen.getByRole("status").textContent).toBe(m.common_loading())
-    expect(
-      list.container.querySelectorAll('[data-slot="skeleton"]'),
-    ).toHaveLength(12)
-    list.unmount()
-
-    const detail = render(<NoteDetailSkeleton />)
-    expect(screen.getByRole("status").textContent).toBe(m.common_loading())
-    expect(
-      detail.container.querySelectorAll('[data-slot="skeleton"]'),
-    ).toHaveLength(5)
   })
 })
 

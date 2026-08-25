@@ -29,6 +29,7 @@
     "db:push": "pnpm --filter @repo/shared db:push",
     "db:reset": "pnpm --filter @repo/shared db:reset",
     "db:seed": "pnpm --filter @repo/shared db:seed",
+    "admin:promote": "pnpm --filter @repo/shared admin:promote",
     "db:studio": "pnpm --filter @repo/shared db:studio",
     "docker:up": "docker compose up -d --wait",
     "docker:down": "docker compose down",
