@@ -1,6 +1,6 @@
 # First shared environment
 
-Establish these in order when the first staging or production environment is created:
+Establish in order:
 
 1. An environment and callback matrix — exact origins and provider callback URLs, no secret values — plus a
    credential rotation procedure: create the replacement, deploy it, verify the whole flow, then revoke.

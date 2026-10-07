@@ -19,8 +19,8 @@ user-invocable: false
 
 ## Generated schema
 
-Generate Better Auth's Drizzle schema (`packages/shared/src/db/schema/auth.gen.ts`) with the `auth` CLI (Better
-Auth's CLI package) at the same version as `better-auth` in `apps/web/package.json`, and never hand-edit it
+Generate Better Auth's Drizzle schema (`packages/shared/src/db/schema/auth.gen.ts`) with the `auth` CLI at the
+`better-auth` version pinned in `apps/web/package.json`, and never hand-edit it
 *(enforced: write-guard hook)*. The CLI cannot load the runtime config, so it reads
 `apps/web/auth-cli.config.ts` — keep that mirror's plugins and schema-affecting options in sync with
 `auth.server.ts`. Generate and review a Drizzle migration after each regeneration.
@@ -45,9 +45,8 @@ it for `timestamptz`, and app and DB both run UTC. Application-owned tables use 
   own `/api/auth` admin endpoints. `hooks.before` in `auth.server.ts` applies `lib/auth/admin-write-policy.ts`
   to `/admin/set-role` and `/admin/ban-user` only; unban and impersonation rely on the plugin's own checks.
   Disabled UI controls mirror the policy but are not the enforcement.
-- The plugin exposes more admin endpoints than the UI uses (`update-user`, which also accepts `role`,
-  `create-user`, `remove-user`, `set-user-password`), and none pass through the app policy. Before relying on
-  a policy, confirm every endpoint that can perform that write is guarded or disabled.
+- Other plugin admin endpoints (`update-user`, which also accepts `role`, `create-user`, `remove-user`,
+  `set-user-password`) bypass the policy; guard or disable any that can perform a policed write.
 - Blocking is the plugin's ban: it revokes sessions and blocks every sign-in method until lifted. Role and
   ban revocations lag already-issued cookies by up to the 5-minute cookie cache.
 - Bootstrap or recover an admin with `pnpm admin:promote <email>` after the target signs in once; the local

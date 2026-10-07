@@ -31,10 +31,10 @@ user-invocable: false
 - Keys describe meaning and context, not the current English text.
 - Dates, numbers, pluralization, and relative time use locale-aware formatting (`lib/utils/format-date.ts`).
   `lib/i18n/messages.test.ts` checks catalog parity across locales.
-- Catalogs and content compile via `pnpm codegen` and again through the Vite plugins in dev and build. The CLI
-  compile does not pass the Vite plugin's strategy options, so verify locale-routing behavior in the running
-  app, not only in tests. The outputs (`apps/web/i18n/paraglide/`,
-  `apps/web/.content-collections/`) are generated and never hand-edited *(enforced: write-guard hook)*.
+- Catalogs and content compile via `pnpm codegen` and again through the Vite plugins in dev and build; the CLI
+  compile lacks the plugin's strategy options, so verify locale routing in the running app. The outputs
+  (`apps/web/i18n/paraglide/`, `apps/web/.content-collections/`) are generated and never hand-edited
+  *(enforced: write-guard hook)*.
 
 ## Content collections
 
@@ -42,16 +42,16 @@ user-invocable: false
 - Resolve collections through `apps/web/src/lib/content/localized-content.ts`, passing requested and fallback
   locales explicitly.
 - Extract headings deterministically for TOC and anchors; test duplicate and non-Latin headings.
-- MDX currently renders without custom components. If you add them, pass an explicit allowlisted map — never
-  privileged components or server imports.
+- Custom MDX components, if added, come from an explicit allowlisted map — never privileged components or
+  server imports.
 
 ## Routing and SEO
 
 - The locale is explicit in route and content resolution. Localized canonical/alternate metadata belongs in
-  `apps/web/src/lib/seo/`, which today holds only origin/indexing config and robots/sitemap text.
+  `apps/web/src/lib/seo/`.
 - Missing-translation behavior is a deliberate choice per content class: fallback, not-found, or build failure.
-- The sitemap (`routes/sitemap[.]xml.ts`) is a hardcoded path × locale list: add new indexable pages there, and
-  keep unpublished or non-indexable pages out of it and out of metadata.
+- The sitemap (`routes/sitemap[.]xml.ts`) is a hardcoded path × locale list: add new indexable pages there,
+  never unpublished ones.
 
 ## Required checks
 

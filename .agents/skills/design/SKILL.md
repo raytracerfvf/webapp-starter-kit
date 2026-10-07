@@ -17,9 +17,8 @@ user-invocable: false
 - Spacing and breakpoints stay Tailwind defaults. New type styles are `@utility` entries, not `text-[...]`.
 - The body font is self-hosted via `@fontsource-variable/inter` imported in `styles.css`; the stack lives in the
   `--font-sans` theme token. To change fonts, swap that import and token — nothing else.
-- A new color token is defined in both `:root` and `.dark` and mapped in `@theme inline`. A custom value for a
-  stock utility must be registered with tailwind-merge in `lib/utils/cn.ts` so `cn` resolves conflicts (see the
-  `surface-*` values extending the `shadow` group).
+- Register custom values for stock utilities with tailwind-merge in `lib/utils/cn.ts` (see `surface-*` in the
+  `shadow` group).
 - `styles.css` is excluded from Biome, so edits there get no tooling feedback — review light/dark token pairs
   by hand.
 - No hardcoded hex or oklch, no palette utilities (`bg-blue-500`), and no arbitrary values where a token or
@@ -73,8 +72,7 @@ user-invocable: false
   boolean values that fail enum resolvers.
 - Every form renders an error for each registered field, or a root error fallback. `handleSubmit` swallows
   resolver failures by design, so an unrendered field error is an invisible dead submit button.
-- Keep the focus, escape, and outside-click behavior the Radix primitives provide; do not override it without a
-  reason.
+- Don't override the Radix primitives' focus, escape, and outside-click behavior without a reason.
 
 Refs: `apps/web/src/styles.css` · `apps/web/src/lib/ui-styles.ts` · `apps/web/src/lib/utils/cn.ts` ·
 `apps/web/components.json`.

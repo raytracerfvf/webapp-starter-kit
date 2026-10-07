@@ -38,8 +38,7 @@ semantics to production operations. They never use raw SQL, and application code
 
 **The table is the root of the type graph, and the graph flows one way: storage → domain.** Nothing in
 `db/schema/**` may import from `domain/<domain>/**`. A contract the table itself needs — a JSONB payload shape —
-lives *with* the table. The only things below the schema are the leaf modules `domain/enums.ts` and
-`domain/public-id.ts`, which the schema imports.
+lives *with* the table. Only the leaf modules `domain/enums.ts` and `domain/public-id.ts` sit below it.
 
 - Derive the row schema beside the table: `createSelectSchema(table, refinements)`. Lengths, nullability, enum
   members, and defaults then come from the DDL. Consumers use the table module's named constants rather than
@@ -64,8 +63,7 @@ lives *with* the table. The only things below the schema are the leaf modules `d
 
 - Generate from reviewed schema changes (`pnpm db:generate`), then review the SQL and the snapshot diff.
 - Applied migrations and the baseline are immutable — never regenerate, rename, reorder, or edit one already
-  applied in a shared environment *(enforced: the write-guard hook blocks Write/Edit under
-  `packages/shared/drizzle/**`; shell writes bypass it)*.
+  applied in a shared environment *(enforced for Write/Edit by the write-guard hook)*.
 - Additive first. Drops, hard renames, and tightened constraints wait until no code or data depends on the old
   form.
 - Deploy migrations before starting code that requires the expanded schema. CI regenerates and fails on drift.
@@ -142,11 +140,9 @@ mid-run rolls back the schema change with it and holds the migration lock throug
   `version: <DOMAIN>_SCHEMA_VERSION` and update dependent relational projections in the same transaction.
 - Continue past row-level failures, report them, and exit non-zero so reruns are explicit. Rerunning is safe
   because upgraded rows no longer match.
-- Use `packages/shared/scripts/lib/backfill-runner.ts`: `parseBackfillArgs(process.argv.slice(2))` validates
-  `--dry-run` and `--batch-size=`; `runBackfill` drives keyset batches and returns
-  `{ migrated, skipped, failed }` but touches no process state. The script skips writes itself on dry-run and
-  sets `process.exitCode = 1` when `failed > 0`. Run it like the other shared scripts
-  (`tsx --env-file-if-exists=../../.env`), `-- --dry-run` first.
+- Use `packages/shared/scripts/lib/backfill-runner.ts`: `parseBackfillArgs` validates `--dry-run` and
+  `--batch-size=`; `runBackfill` returns `{ migrated, skipped, failed }` and touches no process state, so the
+  script skips writes on dry-run and sets `process.exitCode = 1` on failures. Run `-- --dry-run` first.
 
 ## Release order
 

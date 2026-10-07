@@ -26,12 +26,10 @@ user-invocable: false
 ## Generated code
 
 - Generated route trees, auth schema, API clients, i18n output, content indexes, and Drizzle snapshots are
-  never hand-edited *(enforced for Write/Edit: the write-guard hook blocks them and says how to regenerate each;
-  shell writes bypass it)*.
-- Every generated output has one documented source and one deterministic command. Commit only what build and
-  deploy policy requires: paraglide, content-collections, and the TS client are gitignored; `routeTree.gen.ts`,
-  `auth.gen.ts`, Drizzle output, and `openapi.json` are tracked. CI drift-checks only Drizzle output and
-  `openapi.json`, so review the other tracked files' diffs by hand.
+  never hand-edited *(enforced for Write/Edit by the write-guard hook, which names each regeneration step)*.
+- Every generated output has one documented source and one deterministic command. CI drift-checks only Drizzle
+  output and `openapi.json`; review diffs to the other tracked outputs (`routeTree.gen.ts`, `auth.gen.ts`) by
+  hand.
 - `apps/api-python/openapi.json` is the committed contract snapshot. The TS client regenerates from it with
   Node-only `openapi-ts` (`pnpm codegen`), so installs never require Python. `pnpm codegen:api-client` refreshes
   the snapshot from the FastAPI app via uv, and CI's `quality` job regenerates it and fails on drift. Install

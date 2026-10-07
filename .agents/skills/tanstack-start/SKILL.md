@@ -67,8 +67,8 @@ Defining `src/start.ts` replaces Start's implicit middleware defaults, so CSRF m
 `createCsrfMiddleware({ filter: (ctx) => ctx.handlerType === "serverFn" })`. Requests without same-origin
 evidence stay rejected unless the deployment documents an equivalent control.
 
-Request middleware order in `start.ts`: Paraglide locale → logging (owns request context and correlation, so it
-precedes anything that logs) → request error sanitizer → security headers → CSRF → SEO headers. Server-function
+Request middleware order in `start.ts`: Paraglide locale → logging (owns request context) → request error
+sanitizer → security headers → CSRF → SEO headers. Server-function
 errors are serialized before request middleware sees them, so `fnGuardMiddleware` sanitizes them as *function*
 middleware; both sanitizers share `sanitizeBoundaryError`.
 

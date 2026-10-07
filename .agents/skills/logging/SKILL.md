@@ -16,8 +16,7 @@ user-invocable: false
 
 ## Structured fields
 
-- Levels: `warn` covers intentional rejections as well as degraded continuation; `error` is reserved for
-  unexpected failures.
+- Intentional rejections log at `warn`; `error` is for unexpected failures.
 - Pass caught exceptions as `error`. Pino's `errorKey` is set to `"error"` in
   `apps/web/src/lib/middleware/request-context.server.ts` — keep the two aligned or exceptions serialize as
   `{}`.

@@ -44,13 +44,12 @@ consumer.
 - **Server** — validation, auth and authorization, transactions, error sanitization, request context.
 - **Build/contract** — generated drift, type inference, server-only boundaries, React Compiler output, bundles.
 
-Harnesses, with the nearest test in the same layer as the style reference:
+Harnesses (copy style from the nearest test in the same layer):
 
 - Real SQL domain tests: `createTestDb()` and `createTestUser()` from `packages/shared/src/db/test-db.ts` —
   in-memory PGlite with migrations applied. Create one per test file; never share an instance.
 - Server-function boundaries: mock `@tanstack/react-start` so `createServerFn` is the recorder from
-  `apps/web/src/server/test-boundary-recorder.ts`, then assert the attached middleware, validator, and method
-  rather than issuing real RPC calls.
+  `apps/web/src/server/test-boundary-recorder.ts`, then assert the attached middleware, validator, and method.
 
 ## Placement
 
@@ -62,7 +61,7 @@ Harnesses, with the nearest test in the same layer as the style reference:
 
 ## Isolation
 
-`isolate: false` means module state leaks between files (AGENTS.md has the rule). Reset fake timers, mocks,
+`isolate: false` means module state leaks between files. Reset fake timers, mocks,
 environment mutations, and module singletons explicitly; reach for `vi.resetModules()` or a per-file isolated
 project only for code that genuinely needs fresh evaluation.
 

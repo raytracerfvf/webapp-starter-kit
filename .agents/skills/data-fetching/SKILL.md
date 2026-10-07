@@ -9,11 +9,10 @@ user-invocable: false
 ## Server functions
 
 Keep them in `apps/web/src/server/`, one module per domain (the session read in `lib/auth/session.ts` is the
-one exception). Never pass `strict: false`; the framework's strict serialization is the default.
+one exception). Never pass `strict: false`.
 
-Validate input with `.validator(zodValidator(Schema))` from `lib/server-fn-validator.ts`. A bare schema takes
-the Standard Schema path, which wraps issues in a plain `Error` and reaches the client as a 500 instead of
-`400 VALIDATION_ERROR`.
+Validate input with `.validator(zodValidator(Schema))` from `lib/server-fn-validator.ts`; a bare schema
+surfaces as a 500 instead of `400 VALIDATION_ERROR`.
 
 Handler order: resolve authentication, tenant, and resource access → acquire the executor or transaction →
 call shared operations → map domain errors to safe HTTP errors → log only what global middleware cannot
@@ -47,8 +46,8 @@ Two channels, and choosing the wrong one is the common mistake:
   codes `NOT_FOUND`, `UNAUTHENTICATED`, `FORBIDDEN`); add a small named helper in that shape for a new status.
   Helpers log their `meta` bag server-side (domain IDs and counts only); the wire carries just message, status,
   and code.
-- Any other thrown `Error` reaches the client as a generic message, so never throw a plain `Error` expecting
-  its text to render. Hand-thrown 400s are rare — validation belongs to the validator.
+- Any other thrown `Error` reaches the client as a generic message. Hand-thrown 400s are rare — validation
+  belongs to the validator.
 - When client copy must vary by failure kind, transport a stable machine `code`: declare a `z.enum` of codes in
   `packages/shared/src/domain`, decode transported errors with a `safeParse` helper shaped like
   `decodeHttpError` in `lib/errors.ts`, and map codes to localized copy via `Record<Code, () => string>` at the
@@ -66,8 +65,7 @@ One home per hook kind. Biome enforces the directory boundaries (alias imports o
 | Store access | `contexts/` hooks | call the context hooks |
 
 Auth actions are writes too: `@/lib/auth/client` is importable only from `lib/auth/**` and `lib/hooks/**`, so
-Better Auth calls (sign-in, sign-out, admin writes) live inline in their `lib/hooks/use-<domain>-mutations.ts`
-rather than in `lib/queries/`.
+Better Auth calls live directly in `lib/hooks/use-<domain>-mutations.ts`.
 
 ## Reads
 

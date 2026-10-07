@@ -8,8 +8,7 @@ user-invocable: false
 
 Read the `state-management` skill first. Create only the capabilities the feature needs.
 
-1. Confirm Zustand owns the value (AGENTS.md ownership table). If Query, search params, React Hook Form, or
-   `useState` owns it, stop.
+1. Confirm Zustand owns the value (AGENTS.md ownership table).
 2. Factory: `apps/web/src/lib/store/<feature>-store.ts` — vanilla `createStore` with explicit init props; every
    state field and action present in the initial state.
 3. Selectors, only for parameterized, composite, or derived reads:

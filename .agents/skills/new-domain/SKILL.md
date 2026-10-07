@@ -6,8 +6,7 @@ user-invocable: false
 
 # Add a new domain module
 
-Follow this sequence in order: leaf enums and public IDs → table → domain operations → web layers. The schema
-imports the leaves and nothing in `domain/<domain>/**`, so taking the steps out of order produces import cycles.
+Follow this sequence in order — leaf enums and public IDs → table → domain → web — or you get import cycles.
 If an end-to-end domain currently exists, inspect it for local layering and file placement without copying its
 product semantics or naming. The workflow must still work after every starter example is removed.
 
@@ -50,8 +49,7 @@ to make every layer appear; implement only what the resource needs.
     rows to `throwNotFound(...)`. Do not add a dummy validator to a function with no input.
 13. `apps/web/src/lib/queries/<domain>.ts` — hierarchical key factory (`all` → `lists()` → `list(input)` →
     `details()` → `detail(id)`), `queryOptions` factories, mutation functions. This is the ONLY file allowed to
-    import `@/server/<domain>` (Biome enforces it). Better Auth-backed writes are the exception: they call the
-    auth client from the mutation hook.
+    import `@/server/<domain>` (Biome enforces it).
 14. `apps/web/src/lib/hooks/use-<domain>-queries.ts` — named read hooks wrapping the query options. Production
     React Query hooks are lint-banned outside `lib/hooks/**`.
 15. `apps/web/src/lib/hooks/use-<domain>-mutations.ts` — all the domain's write hooks, including any autosave

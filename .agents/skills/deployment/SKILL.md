@@ -31,8 +31,7 @@ project, service, environment, and ref are confirmed. Production is always a sep
 
 - Local, staging, and production use separate databases, auth secrets, OAuth clients, email keys, and analytics
   keys.
-- Production requires explicit HTTP(S) origins: `VITE_SITE_ORIGIN` at build time, `BETTER_AUTH_URL` at startup
-  (it defaults to localhost outside production).
+- Production requires explicit HTTP(S) origins: `VITE_SITE_ORIGIN` at build time, `BETTER_AUTH_URL` at startup.
 - Releases are manual `workflow_dispatch` runs, serialized per environment; production promotion is an explicit
   reviewed action.
 

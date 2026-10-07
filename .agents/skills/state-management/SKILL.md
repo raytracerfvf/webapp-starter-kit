@@ -8,10 +8,8 @@ user-invocable: false
 
 ## Ownership
 
-AGENTS.md's State ownership section governs: never mirror Query data into a store; a route-scoped editor
-snapshots once and owns its draft; RHF and Zustand share an editor without mirroring Effects. In practice the
-initializer runs once, there is no prop-sync Effect, and identity changes remount via the route key. Ordinary
-forms stay RHF-only.
+AGENTS.md's State ownership section governs. For a route-scoped editor, the initializer runs once, there is no
+prop-sync Effect, and identity changes remount via the route key.
 
 ## Store construction
 
@@ -32,9 +30,7 @@ forms stay RHF-only.
 - Raw store APIs belong to providers, lifecycle hooks, tests, imperative integrations, and event-time snapshots
   in handlers — never render-time reads.
 
-Files: `lib/store/<feature>-store.ts` (factory), optional `<feature>-store-selectors.ts` and
-`<feature>-storage.ts` beside it, and `contexts/<feature>-context.tsx` (provider and hooks). Use the `new-store`
-workflow to add one.
+Use the `new-store` workflow to add one.
 
 ## Selectors and hooks
 
@@ -44,9 +40,8 @@ workflow to add one.
   take the provider-owned store, and the context binds them so components never touch Zustand. Keep pure
   domain derivation outside React and call it from the selector hook.
 - A composite must be one semantic value or operation. Recognizer: if you cannot name it without "and", it is
-  a bag — a `useActions()` returning every action, or a `useEditorFields()` returning title and content, are
-  bags. Use `useShallow` only when a selector genuinely assembles a new object or array whose shallow contents
-  define equality.
+  a bag — `useActions()` returning every action is one. Use `useShallow` only when a selector genuinely
+  assembles a new object or array whose shallow contents define equality.
 - Keep render subscriptions and imperative access visibly separate: focused hooks read render state;
   `use<Feature>Api` is for lifecycle hooks, subscriptions, event-time snapshots, and tests.
 - Zustand v5 requires stable selector outputs. Never return a fresh object or array without a deliberate
@@ -112,8 +107,8 @@ cancellation.
 
 ## Autosave
 
-- The autosave lifecycle hook lives in `lib/hooks/use-<domain>-mutations.ts` (React Query hooks are
-  lint-banned elsewhere) and reads the store through `use<Feature>Api`.
+- The autosave lifecycle hook lives in `lib/hooks/use-<domain>-mutations.ts` and reads the store through
+  `use<Feature>Api`.
 - Serialize writes within one editor client — a slower earlier request must never overwrite a newer local edit.
   A Query mutation scope is client-local, not cross-tab or cross-device conflict detection; use a server-checked
   revision only when the product requires that stronger guarantee.
