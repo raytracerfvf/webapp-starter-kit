@@ -9,9 +9,8 @@ user-invocable: false
 ## Dependency direction
 
 - `apps/web` consumes public exports from `packages/shared`.
-- The optional Python service owns its internal router, service, and library layers and exposes an OpenAPI
-  contract. The generated API client depends on generated artifacts and shared transport conventions, never on
-  web components.
+- The optional Python service exposes only its OpenAPI contract; `packages/api-client` is generated from it and
+  never imports web code.
 - Circular workspace dependencies are forbidden.
 
 ## Shared package
@@ -27,22 +26,20 @@ user-invocable: false
 ## Generated code
 
 - Generated route trees, auth schema, API clients, i18n output, content indexes, and Drizzle snapshots are
-  never hand-edited *(enforced: write-guard hook — it names the regeneration command per artifact)*.
-- Every generated output has one documented source and one deterministic command. CI regenerates tracked output
-  and fails on drift.
-- Commit only what build and deploy policy requires; ignore reproducible transient output.
+  never hand-edited *(enforced for Write/Edit by the write-guard hook, which names each regeneration step)*.
+- Every generated output has one documented source and one deterministic command. CI drift-checks only Drizzle
+  output and `openapi.json`; review diffs to the other tracked outputs (`routeTree.gen.ts`, `auth.gen.ts`) by
+  hand.
 - `apps/api-python/openapi.json` is the committed contract snapshot. The TS client regenerates from it with
   Node-only `openapi-ts` (`pnpm codegen`), so installs never require Python. `pnpm codegen:api-client` refreshes
-  the snapshot from the FastAPI app via uv, and CI's Python job regenerates it and fails on drift. Install and
-  dev tasks run `pnpm codegen` or its Turbo dependencies so ignored generated output exists locally.
+  the snapshot from the FastAPI app via uv, and CI's `quality` job regenerates it and fails on drift. Install
+  and dev tasks run `pnpm codegen` or its Turbo dependencies so ignored generated output exists locally.
 
 ## Dependencies
 
 - Use the pnpm catalog for versions shared by multiple workspaces.
-- Pin RC and rapidly changing infrastructure exactly; use ranges only where the plan says so.
+- Pin RC and rapidly changing infrastructure exactly; use ranges only as a deliberate choice.
 - Put a dependency in the workspace that imports it — never rely on hoisting.
-- pnpm fails installs on unapproved build scripts. Review any new install script before adding the package to
-  `allowBuilds` in `pnpm-workspace.yaml`.
 - `packages/api-client` pins `typescript@6` locally because `openapi-ts` consumes the legacy TS compiler API at
   runtime, which TS 7 removed. Its `typecheck` script deliberately runs the root TS 7 `tsc` instead.
 - Do not add a library that overlaps a concern the selected stack already owns.

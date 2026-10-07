@@ -14,31 +14,27 @@ user-invocable: false
   `getRequestLogger()`. Never thread loggers through domain-operation signatures.
 - Return the correlation ID in the response so support can find the logs.
 
-## Levels
-
-- `error` — unexpected failure requiring investigation.
-- `warn` — degraded continuation or intentional rejection worth noticing.
-- `info` — meaningful state transitions and request bookkeeping.
-- `debug` — high-frequency diagnostic signal, disabled in ordinary production output.
-
 ## Structured fields
 
+- Intentional rejections log at `warn`; `error` is for unexpected failures.
 - Pass caught exceptions as `error`. Pino's `errorKey` is set to `"error"` in
   `apps/web/src/lib/middleware/request-context.server.ts` — keep the two aligned or exceptions serialize as
   `{}`.
-- Prefer stable domain identifiers and counts over whole objects.
-- Use consistent names: `duration`, `statusCode`, `userId`, `resourceId`, `url`, `reason`, `upstreamError`.
-  Strip credentials and sensitive query parameters before logging a URL.
-- Never use `message`, `msg`, `level`, or `time` as merge-field names — collectors reserve them. Not lintable;
-  it lives here.
-- Production emits string severity names.
+- Use consistent names: `duration`, `statusCode`, `userId`, `resourceId`, `url`, `reason`, and `upstreamError`
+  (a message string — only the `error` key serializes Error objects). Strip credentials and sensitive query
+  parameters before logging a URL.
+- Messages follow `"[scope.event] verb"`, e.g. `"[auth.welcome] failed"`.
+- Outside a request, use `baseLogger`. After authentication, `setRequestUserId` rebinds the request logger.
+- Never use `message`, `msg`, `level`, or `time` as merge-field names — collectors reserve them.
 
 ## Privacy
 
-Never log names, email addresses, email bodies, tokens, secrets, cookies, or authorization headers; complete
-auth, provider, or webhook payloads; user-entered document bodies; raw database rows or another user's
-identifiers; or unbounded strings. Truncate any necessary user-provided diagnostic fragment and document why it
-is safe.
+`loggerOptions.redact` in `request-context.server.ts` is a backstop: it censors `email`, `token`, `secret`,
+`password`, `cookie`, `authorization`, and `headers` at the top level and one level deep. Do not rely on it.
+
+Beyond the AGENTS.md list, never log email bodies, cookies, authorization headers, provider or webhook payloads,
+user-entered document bodies, raw database rows, another user's identifiers, or unbounded strings. Prefer
+domain IDs and counts over whole objects.
 
 The single exception is the deliberate local `EMAIL_MODE=log` delivery sink. Treat its magic link as a
 credential: keep it out of shared and production logs, and never copy it into generic request or error events.
@@ -55,8 +51,9 @@ credential: keep it out of shared and production logs, and never copy it into ge
 
 ## Client error contract
 
-Clients receive a stable actionable message, a status, and an optional machine-readable code. Upstream text,
-stacks, hosts, SQL, library details, and internal identifiers stay in logs tied to the correlation ID.
+Clients receive a message, a status, and an optional code (helpers and codes in `data-fetching`). Helper `meta`
+goes to the log only, and `sanitizeBoundaryError` replaces any other thrown error with a generic message, so
+upstream text, stacks, hosts, SQL, and internal identifiers stay in logs tied to the correlation ID.
 
 ## Required tests
 

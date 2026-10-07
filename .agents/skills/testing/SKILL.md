@@ -44,8 +44,12 @@ consumer.
 - **Server** — validation, auth and authorization, transactions, error sanitization, request context.
 - **Build/contract** — generated drift, type inference, server-only boundaries, React Compiler output, bundles.
 
-Use `packages/shared/src/db/test-db.ts` for real SQL domain tests, and the nearest test in the same layer as a
-style reference.
+Harnesses (copy style from the nearest test in the same layer):
+
+- Real SQL domain tests: `createTestDb()` and `createTestUser()` from `packages/shared/src/db/test-db.ts` —
+  in-memory PGlite with migrations applied. Create one per test file; never share an instance.
+- Server-function boundaries: mock `@tanstack/react-start` so `createServerFn` is the recorder from
+  `apps/web/src/server/test-boundary-recorder.ts`, then assert the attached middleware, validator, and method.
 
 ## Placement
 
@@ -57,30 +61,15 @@ style reference.
 
 ## Isolation
 
-`isolate: false` buys speed and means module state leaks between files.
+`isolate: false` means module state leaks between files. Reset fake timers, mocks,
+environment mutations, and module singletons explicitly; reach for `vi.resetModules()` or a per-file isolated
+project only for code that genuinely needs fresh evaluation.
 
-- Reset fake timers, mocks, environment mutations, and module singletons explicitly.
-- Reach for `vi.resetModules()` or a per-file isolated project only for code that genuinely needs fresh
-  evaluation.
-- Never depend on execution order.
-- A test that passes alone and fails in the suite is an isolation bug. Find the leak — retries and skips hide it.
-
-## Which matrix applies
+## Area test lists
 
 Each area skill closes with a required-test list. Treat it as a risk catalog for behavior changed in that area,
-not a requirement to create a separate test for every listed item or touched layer:
-
-| Area | Skill |
-|---|---|
-| Stores, selectors, undo, drafts, autosave | `state-management` |
-| Query keys, invalidation, validators, authorization, error sanitization | `data-fetching` |
-| Stored versions, backfills, schema drift | `database` |
-| Routes, loaders, SSR hydration, CSRF | `tanstack-start` |
-| Correlation, log privacy | `logging` |
-| Auth flows, email | `auth-and-email` |
-
-A cross-cutting change may need tests from more than one matrix only when each boundary can fail independently.
-Reuse an existing higher-signal test when it already proves the behavior.
+not a requirement to create a separate test for every listed item or touched layer. Reuse an existing
+higher-signal test when it already proves the behavior.
 
 ## Browser automation
 

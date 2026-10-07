@@ -11,17 +11,19 @@ user-invocable: false
 - Better Auth owns sessions, accounts, verification, and provider callbacks; Drizzle and PostgreSQL own durable
   auth data through the generated schema; server functions and operations own authorization.
 - React Query owns client session and user reads where caching helps. Successful sign-out and confirmed session
-  loss clear the Query cache, then invalidate the router so root auth context is rebuilt — mutation hooks own
-  that consistency work, components own navigation and other UI effects.
+  loss clear the Query cache, then invalidate the router so root auth context is rebuilt: the sign-out mutation
+  hook does it for sign-out, the `MutationCache` 401 handler in `router.tsx` for session loss. Impersonation
+  start/stop instead does a full page load. Components own navigation and other UI effects.
 - React Email renders templates; `apps/web/src/lib/email/mailer.server.ts` selects log, provider, or disabled
   mode.
 
 ## Generated schema
 
 Generate Better Auth's Drizzle schema (`packages/shared/src/db/schema/auth.gen.ts`) with the `auth` CLI at the
-pinned better-auth version and never hand-edit it *(enforced: write-guard hook)*. The CLI cannot load the
-runtime config, so it reads `apps/web/auth-cli.config.ts` — keep that mirror's plugins and schema-affecting
-options in sync with `auth.server.ts`. Generate and review a Drizzle migration after each regeneration.
+`better-auth` version pinned in `apps/web/package.json`, and never hand-edit it
+*(enforced: write-guard hook)*. The CLI cannot load the runtime config, so it reads
+`apps/web/auth-cli.config.ts` — keep that mirror's plugins and schema-affecting options in sync with
+`auth.server.ts`. Generate and review a Drizzle migration after each regeneration.
 
 ```bash
 pnpm dotenv -e .env -- pnpm dlx auth@<pinned version> generate \
@@ -40,8 +42,11 @@ it for `timestamptz`, and app and DB both run UTC. Application-owned tables use 
   `normalizeRoles`/`serializeRoles`, and pass `defaultRole`/`adminRoles` to `admin()` from the same constants.
 - `requireAdminMiddleware` guards admin-only server functions; the `/admin` route redirect is UX only.
 - App-defined admin server functions are read-only. Role, ban, and impersonation writes call Better Auth's
-  own `/api/auth` admin endpoints, validated server-side by `lib/auth/admin-write-policy.ts` (wired through
-  `hooks.before`) — disabled UI controls mirror that policy but are not the enforcement.
+  own `/api/auth` admin endpoints. `hooks.before` in `auth.server.ts` applies `lib/auth/admin-write-policy.ts`
+  to `/admin/set-role` and `/admin/ban-user` only; unban and impersonation rely on the plugin's own checks.
+  Disabled UI controls mirror the policy but are not the enforcement.
+- Other plugin admin endpoints (`update-user`, which also accepts `role`, `create-user`, `remove-user`,
+  `set-user-password`) bypass the policy; guard or disable any that can perform a policed write.
 - Blocking is the plugin's ban: it revokes sessions and blocks every sign-in method until lifted. Role and
   ban revocations lag already-issued cookies by up to the 5-minute cookie cache.
 - Bootstrap or recover an admin with `pnpm admin:promote <email>` after the target signs in once; the local
@@ -49,15 +54,11 @@ it for `timestamptz`, and app and DB both run UTC. Application-owned tables use 
 
 ## Security invariants
 
-- A session establishes identity, not authorization. Check ownership, tenant membership, role, visibility, and
-  resource status where the data is accessed, in server-function middleware or operations — never only in a
-  route redirect.
-- Session cookies are secure in production and configured for the exact trusted origin.
-- Rate-limit magic-link and social-auth endpoints with durable shared storage in deployed environments
-  (database-backed here). Magic-link sign-in is 3/60s — relevant when testing sign-in repeatedly.
-- Account linking requires provider-verified identity and a deliberate trusted-provider policy.
-- Auth cleanup and internal endpoints use constant-time secret comparison and are never reachable from client
-  code.
+- Rate limits use database storage so they hold across instances. Magic-link sign-in is 3/60s — relevant when
+  testing sign-in repeatedly.
+- Do not enable account linking without provider-verified identity and an explicit trusted-provider list.
+- `POST /api/internal/auth-cleanup` requires `AUTH_CLEANUP_SECRET` in `x-cleanup-secret`, compared in constant
+  time. Internal endpoints are never called from client code.
 
 ## OAuth providers
 
@@ -65,9 +66,8 @@ Google uses `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET`, GitHub uses `GITHUB_CLIEN
 A provider is disabled when both values are absent, and startup fails when only one of a pair is present.
 Callback URLs are `<BETTER_AUTH_URL>/api/auth/callback/{google,github}`.
 
-`BETTER_AUTH_URL` equals the public origin exactly, including scheme and port, and is required explicitly in
-production rather than defaulting to localhost. Never use wildcard redirects. Providers that allow only one
-callback need one application per environment, and production OAuth clients stay isolated from non-production.
+`BETTER_AUTH_URL` equals the public origin exactly, including scheme and port. Use a separate OAuth application
+per environment.
 
 ## Email boundary
 
@@ -77,22 +77,15 @@ Three explicit modes: `log` (local delivery sink), `resend` (deployed delivery, 
 - `log` writes a credential-bearing sign-in link to the request logger. Treat it as a credential: keep it out
   of shared and production logging.
 - Render HTML and text from the same typed template props.
-- Validate every callback and redirect URL against trusted origins before placing it in email — the mailer
-  checks against `BETTER_AUTH_URL`.
-- Keep tracking and webhooks disabled unless the product needs them and the privacy design is done.
-- Use an environment-specific sender, domain, and key, and a staging subject prefix where helpful.
+- The mailer validates every link against `BETTER_AUTH_URL` before placing it in email; keep that check.
+- The sender is hardcoded in `mailer.server.ts` to Resend's onboarding address — replace it with an
+  environment-specific sender and verified domain (SPF, DKIM, DMARC) before production sending.
 
-## Local setup
-
-The app must boot and support log-mode magic links with only `DATABASE_URL` and `BETTER_AUTH_SECRET`. Social
-providers activate only with a complete, valid credential pair.
-
-## Before deployed credentials exist
+## Live credentials
 
 Keep code and configuration work local. Before creating, rotating, or revoking deployed credentials, or sending
-live email, confirm the provider account, environment, and target address with the user. Use a distinct Better
-Auth secret per environment, never prefix a secret with `VITE_`, and never put staging or production provider
-keys in the repository `.env`. Configure and verify SPF, DKIM, and DMARC before production sending.
+live email, confirm the provider account, environment, and target address with the user. Staging and
+production keys never go in the repository `.env`.
 
 ## Required checks
 

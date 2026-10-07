@@ -33,9 +33,9 @@ pnpm docker:up        pnpm docker:down      pnpm email:dev
 
 The Python service defines the same task names (`lint`, `format`, `typecheck`, `test`) wrapping uv, so `turbo
 run` covers it; there are no separate `py:*` commands. Removing the Python service means deleting its two packages,
-the web integration route and adapter, the web dependency and environment keys, and service-only automation
-such as the CI Python job; regenerate the route tree and lockfile afterward. Turbo tasks and Docker manifest
-copying adapt to the remaining workspaces by presence.
+the web integration route and adapter, and the web dependency and environment keys; regenerate the route tree
+and lockfile afterward. Turbo tasks, Docker manifest copying, and the CI uv and OpenAPI steps adapt to the
+remaining workspaces by presence.
 
 Prefer a filtered or single-file test while iterating, then the affected workspace's typecheck and tests.
 The completion gate for a cross-cutting change is `pnpm check-all && pnpm test`.
