@@ -6,23 +6,22 @@ user-invocable: false
 
 # Design system
 
-Code is the source of truth — read `apps/web/src/styles.css`, `apps/web/src/lib/ui-styles.ts`, and
-`apps/web/src/components/ui/` before changing any of them.
-
 ## Tokens
 
-- `styles.css` is the only token source: raw oklch values in `:root` and `.dark`, semantic mapping in
-  `@theme inline`. Tailwind v4 CSS-first — no `tailwind.config.*`, no PostCSS.
+- `styles.css` is the only token source. Tailwind v4 CSS-first — no `tailwind.config.*`, no PostCSS.
+- Color tokens: raw oklch values in `:root` and `.dark`, mapped in `@theme inline`. Non-color tokens (font,
+  radius, `surface-*` shadows) are declared once, directly in `@theme inline`.
 - Name tokens by intent (`primary`, `muted`, `surface-1`), never by appearance.
 - The palette is deliberately smaller than stock shadcn (no `secondary`, `accent`, `popover`, `input`, `ring`).
   Map pasted code onto existing tokens; add one only for a genuinely new intent.
 - Spacing and breakpoints stay Tailwind defaults. New type styles are `@utility` entries, not `text-[...]`.
 - The body font is self-hosted via `@fontsource-variable/inter` imported in `styles.css`; the stack lives in the
   `--font-sans` theme token. To change fonts, swap that import and token — nothing else.
-- A new token is defined in both `:root` and `.dark` and mapped in `@theme inline`. A new utility namespace also
-  registers a tailwind-merge class group in `lib/utils/cn.ts` (see the `surface-*` shadows there).
-- `styles.css` is excluded from Biome and the write hook, so edits there get no tooling feedback — review
-  light/dark token pairs by hand.
+- A new color token is defined in both `:root` and `.dark` and mapped in `@theme inline`. A custom value for a
+  stock utility must be registered with tailwind-merge in `lib/utils/cn.ts` so `cn` resolves conflicts (see the
+  `surface-*` values extending the `shadow` group).
+- `styles.css` is excluded from Biome, so edits there get no tooling feedback — review light/dark token pairs
+  by hand.
 - No hardcoded hex or oklch, no palette utilities (`bg-blue-500`), and no arbitrary values where a token or
   preset expresses the intent — add the token first. Two exceptions: email templates
   (`lib/email/components/email-layout.tsx`) use inline hex because email clients cannot read CSS variables, so
@@ -38,7 +37,7 @@ Code is the source of truth — read `apps/web/src/styles.css`, `apps/web/src/li
 - Adding a primitive: check current shadcn guidance and `apps/web/components.json`, then run
   `pnpm dlx shadcn@latest add <name>` from `apps/web/`, one at a time. Inspect the generated diff, slim it,
   preserve `className` merging and the unified `radix-ui` import, and replace undefined theme tokens with
-  existing semantic ones.
+  existing semantic ones. The CLI may also inject stock tokens into `styles.css`; revert them.
 - A new look for an existing primitive is a new variant, never a forked component.
 - Extract repeated styling when it represents the same intent and would otherwise drift. Keep page-local
   composition local; use `ui-styles.ts` or a cva variant for shared intent. Cross-feature reuse promotes a
@@ -50,7 +49,8 @@ Code is the source of truth — read `apps/web/src/styles.css`, `apps/web/src/li
   · the header progress line only for route navigation. Never stack a spinner inside a route skeleton.
 - Skeletons use the existing muted token and preserve the major dimensions of what they replace. Add a
   dedicated skeleton token only if muted stops giving adequate contrast in both themes.
-- One pending container announces localized loading text; `LiquidDots`, skeleton shapes, and the progress line
+- One pending container (`PendingState`; the route default is `DefaultPendingComponent`, both in
+  `components/router/`) announces localized loading text; `LiquidDots`, skeleton shapes, and the progress line
   are decorative. Animate only when `prefers-reduced-motion` allows; reduced motion keeps the same layout with
   a static indicator.
 
@@ -59,25 +59,22 @@ Code is the source of truth — read `apps/web/src/styles.css`, `apps/web/src/li
 - `next-themes` (`components/router/theme-provider.tsx`) is the only writer of `.dark`; the `@custom-variant` in
   `styles.css` drives dark styles. Theme-dependent values reach components only through tokens, never through
   `dark:` overrides of hardcoded values.
-- Mobile-first with Tailwind default breakpoints. `md` is the structural breakpoint (nav collapse,
-  panel ↔ drawer); document any deviation here first.
+- Mobile-first with Tailwind default breakpoints. `md` is the structural breakpoint (header layout today; any
+  panel ↔ drawer switch); document any deviation here first.
 - Prefer CSS for visibility switches; add a client gate only for expensive subtrees so SSR stays stable. A JS
   viewport hook, if one is ever added, must `matchMedia` the same breakpoint the CSS uses.
-- One content component renders shared content; panel and drawer wrappers own only chrome.
 
 ## Forms and interaction
 
-- Zod schemas own validation and the owning domain module exports named constraint constants. Reuse those
-  constants in field `min`/`max` attributes; controls may tighten a constraint, never weaken it. Errors
-  associate with their field and are announced accessibly.
+- Native `min`/`max`/`maxLength` attributes reuse the schema's named bound constants; controls may tighten a
+  constraint, never weaken it.
 - Non-text controls (checkbox, switch, select, radio) go through RHF `Controller` or the `ui/` primitives —
   never raw `register` with value coercion. `setValueAs` is silently ignored for checkbox inputs, producing
   boolean values that fail enum resolvers.
 - Every form renders an error for each registered field, or a root error fallback. `handleSubmit` swallows
   resolver failures by design, so an unrendered field error is an invisible dead submit button.
-- Controls need keyboard behavior, visible focus, labels, and pending state. Dialogs trap and restore focus and
-  define escape and outside-click behavior deliberately.
-- Never encode meaning in color alone.
+- Keep the focus, escape, and outside-click behavior the Radix primitives provide; do not override it without a
+  reason.
 
 Refs: `apps/web/src/styles.css` · `apps/web/src/lib/ui-styles.ts` · `apps/web/src/lib/utils/cn.ts` ·
 `apps/web/components.json`.

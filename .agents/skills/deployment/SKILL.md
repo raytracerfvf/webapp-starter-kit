@@ -14,33 +14,33 @@ project, service, environment, and ref are confirmed. Production is always a sep
 
 ## CI
 
-- `ci.yml` runs formatting and lint, React Compiler lint, TypeScript, tests, codegen drift, Drizzle drift, and
-  the production build. Pull requests must pass it before merge; release workflows do not substitute for it.
+- `ci.yml` runs `pnpm check-all`, Drizzle and `openapi.json` drift checks, migrations and seed against a
+  Postgres 18 service, tests, and the production build. Pull requests must pass it before merge; `release.yml`
+  refuses to deploy a SHA without a successful CI run.
 - Pin third-party actions to reviewed commit SHAs and grant minimal permissions.
-- Cache pnpm, Turbo, and uv artifacts. Never cache secrets, or the generated outputs whose drift check is the
-  entire point.
+- Never cache secrets or the generated outputs that drift checks compare.
 
 ## Container
 
-- Pinned Node 24 Debian slim image, manifest-first dependency layer.
-- Build with dev dependencies; ship production dependencies plus server and build artifacts.
-- Run as a non-root user, expose only the application port, handle SIGTERM gracefully.
-- Never bake `.env` files or secrets into layers.
+- `node:24-bookworm-slim` (major version only, not a digest), manifest-first dependency layer, dev
+  dependencies at build and production dependencies at runtime, non-root user. No `.env` or secrets in layers.
 - `/api/health` checks the database and returns 200/503 without exposing internal detail. The deploy script
   records the deployed commit as the `APP_VERSION` build variable, and health reports it.
 
 ## Environments
 
 - Local, staging, and production use separate databases, auth secrets, OAuth clients, email keys, and analytics
-  keys. Environment schemas validate at startup and report missing vs. invalid variables without printing
-  values.
-- Production builds require explicit `BETTER_AUTH_URL` and `VITE_SITE_ORIGIN` HTTP(S) origins.
-- Staging may follow main automatically; production promotion is an explicit reviewed action.
+  keys.
+- Production requires explicit HTTP(S) origins: `VITE_SITE_ORIGIN` at build time, `BETTER_AUTH_URL` at startup
+  (it defaults to localhost outside production).
+- Releases are manual `workflow_dispatch` runs, serialized per environment; production promotion is an explicit
+  reviewed action.
 
 ## Database changes
 
-- Pre-deploy applies reviewed SQL migrations (`pnpm db:migrate:deploy`) and prevents the new app from starting
-  on failure.
+- `railway-deploy.sh` applies reviewed SQL migrations (`pnpm db:migrate:deploy`) before `railway up`, so a
+  failure stops the release. `railway.web.json` has no `preDeployCommand`: leave Railway's GitHub auto-deploy
+  off, or those deploys skip migrations.
 - Application-data backfills are separate controlled operations, never hidden in startup, and run sequentially
   by default so load and failure analysis stay simple. Release ordering lives in the `database` skill.
 
@@ -57,19 +57,12 @@ project, service, environment, and ref are confirmed. Production is always a sep
   the wrong target fails instead of deploying somewhere implicit. The CLI version is pinned; override with
   `RAILWAY_CLI_VERSION`.
 - The workflow installs the workspace with `--ignore-scripts` because `railway run … pnpm db:migrate:deploy`
-  executes locally with injected service variables. Migrations run before `railway up --ci` ships the new
-  build. When `PUBLIC_ORIGIN` is set, the release gates on `/api/health` reporting `status: ok`.
+  executes locally with injected service variables. When `PUBLIC_ORIGIN` is set, the release gates on
+  `/api/health` reporting `status: ok`.
 
 ## Before the first shared environment
 
-None of the following applies until one exists. When it does, establish in this order:
-
-1. An environment and callback matrix — exact origins and provider callback URLs, no secret values — plus a
-   credential rotation procedure: create the replacement, deploy it, verify the whole flow, then revoke.
-2. A smoke-test pass: health and graceful response · correlation and security headers · sign-in and sign-out ·
-   one protected read/write plus an authorization rejection · asset compression and cache headers ·
-   robots/indexing policy · analytics-disabled behavior with no key · after a schema change, an old-version
-   read and a current-version write.
-3. Backup ownership with a last-verified date, and the incident correlation-ID lookup path.
+When the first staging or production environment is being set up, follow
+[first-shared-environment.md](first-shared-environment.md).
 
 Refs: `.github/workflows/` · `.github/scripts/railway-deploy.sh` · `Dockerfile.web` · `railway.web.json`.
