@@ -6,8 +6,7 @@ user-invocable: false
 
 # Create a feature-scoped Zustand store
 
-The rules live in the `state-management` skill — read it first. This is the build order. Create only the
-capabilities the feature needs.
+Read the `state-management` skill first. Create only the capabilities the feature needs.
 
 1. Confirm Zustand owns the value (AGENTS.md ownership table). If Query, search params, React Hook Form, or
    `useState` owns it, stop.
